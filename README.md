@@ -4,7 +4,11 @@ The AI agent service for **Secrets**. It streams chat from **Gemini** or **OpenR
 
 [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/titan717/ai.secrets)
 [![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/new/template?template=https://github.com/titan717/ai.secrets)
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/titan717/ai.secrets)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/titan717/ai.secrets&project-name=secrets-ai)
+
+- **Render** reads [`render.yaml`](render.yaml), the Blueprint, and prompts for any `sync: false` env vars.
+- **Railway** builds the [`Dockerfile`](Dockerfile) using [`railway.json`](railway.json), with a `/health` healthcheck. If the button opens an empty project, use **New Project → Deploy from GitHub repo → titan717/ai.secrets** instead. Railway's official one-click buttons require a published template.
+- **Vercel** deploys [`api/index.ts`](api/index.ts) as a Node.js Function, using [`vercel.json`](vercel.json).
 
 The service stores no keys. The browser sends the provider key, GitHub token and Secrets session token **per request in headers**. They are never logged: Fastify's logger redacts them.
 
@@ -39,7 +43,7 @@ The contract is in [`src/contract.ts`](src/contract.ts), an identical copy of `a
 | `POST` | `/v1/chat` | Body `AiChatRequest`. Headers: `x-provider-key` (required), `x-github-token`, `x-secrets-token`. Responds with `text/event-stream` and `data: <AiStreamEvent>` lines. The first event is `{type:"run", run_id}`. |
 | `POST` | `/v1/chat/:runId/confirm` | `{ call_id, approve }` resumes a run paused on `confirm_required`. A run waits 5 minutes, then treats the call as denied. |
 | `POST` | `/v1/chat/:runId/stop` | Aborts the run, which emits `done: stopped`. Closing the SSE connection also stops it. |
-| `GET` | `/v1/models?provider=gemini\|openrouter` | Header `x-provider-key`. Returns `{ models: {id,name}[] }`, cached (`?refresh=1` bypasses the cache). |
+| `GET` | `/v1/models?provider=gemini\|openrouter\|mock` | Header `x-provider-key` (not needed for `mock`). Returns `{ models: {id,name}[] }`, cached (`?refresh=1` bypasses the cache). |
 | `GET` | `/health` | `{ ok, service, version, active_runs }` |
 
 ```bash
@@ -47,6 +51,23 @@ curl -N localhost:8790/v1/chat -H 'content-type: application/json' -H "x-provide
   "provider":"openrouter","model":"openai/gpt-4o-mini","effort":{"level":"low"},
   "messages":[{"role":"user","content":"Hello"}],
   "agent_mode":false,"tools_enabled":{"github":false,"secrets":false},"auto_approve":false}'
+```
+
+### Mock provider (no key)
+
+`provider: "mock"` (model `mock-1`) works without `x-provider-key`, so the web app can be demoed end to end. The contract's `AiProvider` is `"gemini" | "openrouter" | "mock"`.
+
+- **Agent mode off**: streams a short reasoning delta, then a canned reply that echoes the user's message.
+- **Agent mode on**: offers two demo tools in addition to any enabled real tools.
+  1. Step 1 calls `demo_search`, a read tool.
+  2. Step 2 calls `demo_create_note`, a write tool. This emits `confirm_required` unless `auto_approve` is set.
+  3. Step 3 answers, and the answer changes depending on whether you approved or denied the note.
+- `/v1/models?provider=mock` returns `{ models: [{ id: "mock-1", name: "Mock (demo, no key)" }] }`.
+
+```bash
+curl -N localhost:8790/v1/chat -H 'content-type: application/json' -d '{"provider":"mock","model":"mock-1","effort":{"level":"low"},
+  "messages":[{"role":"user","content":"plan a trip"}],"agent_mode":true,"tools_enabled":{"github":false,"secrets":false},"auto_approve":false}'
+# then: curl -XPOST localhost:8790/v1/chat/<run_id>/confirm -H 'content-type: application/json' -d '{"call_id":"<call_id>","approve":true}'
 ```
 
 ### Effort
