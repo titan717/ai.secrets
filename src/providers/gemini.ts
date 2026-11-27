@@ -201,9 +201,6 @@ export const gemini: ChatProvider = {
     if (req.signal.aborted) return;
 
     for (const call of toolCalls) yield { type: "tool_call", call };
-    if (finish === "content_filter" && !parts.some((p) => p.text && !p.thought)) {
-      yield { type: "text", delta: "_(Gemini stopped this response for safety reasons.)_" };
-    }
     yield { type: "finish", reason: toolCalls.length ? "tool_calls" : (finish ?? "stop"), providerData: { parts } };
   },
 

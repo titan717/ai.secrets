@@ -50,6 +50,7 @@ export async function runAgent({ req, provider, apiKey, ctx, run, emit }: LoopIn
 
       let text = "";
       let providerData: unknown;
+      let finish: string | undefined;
       const calls: { id: string; name: string; args: Record<string, unknown> }[] = [];
       for await (const c of provider.stream({ apiKey, model: req.model, effort: req.effort, messages, tools: tools.length ? tools : undefined, signal })) {
         if (c.type === "text") {
@@ -57,9 +58,15 @@ export async function runAgent({ req, provider, apiKey, ctx, run, emit }: LoopIn
           emit({ type: "text", delta: c.delta });
         } else if (c.type === "reasoning") emit({ type: "reasoning", delta: c.delta });
         else if (c.type === "tool_call") calls.push(c.call);
-        else if (c.type === "finish") providerData = c.providerData;
+        else if (c.type === "finish") {
+          providerData = c.providerData;
+          finish = c.reason;
+        }
       }
       if (signal.aborted) return emit({ type: "done", reason: "stopped" });
+      if (!calls.length && finish === "length") emit({ type: "text", delta: "\n\n_(Response cut off: the model reached its output token limit.)_" });
+      if (!calls.length && finish === "content_filter" && !text) emit({ type: "text", delta: "_(The provider's content filter blocked this response.)_" });
+      if (!calls.length && !text && finish !== "content_filter") emit({ type: "text", delta: "_(The model returned an empty response.)_" });
 
       messages.push({ role: "assistant", content: text, toolCalls: calls.length ? calls : undefined, providerData });
       if (!calls.length) return emit({ type: "done", reason: "complete" });
