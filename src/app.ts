@@ -26,7 +26,7 @@ function corsOrigin(): boolean | string | string[] {
 
 function validateChat(b: any): string | null {
   if (!b || typeof b !== "object") return "Body must be a JSON object (AiChatRequest).";
-  if (b.provider !== "gemini" && b.provider !== "openrouter") return 'provider must be "gemini" or "openrouter".';
+  if (!["gemini", "openrouter", "mock"].includes(b.provider)) return 'provider must be "gemini", "openrouter" or "mock".';
   if (typeof b.model !== "string" || !b.model.trim()) return "model is required.";
   if (!Array.isArray(b.messages) || !b.messages.length) return "messages must be a non-empty array.";
   for (const m of b.messages) {
@@ -67,10 +67,11 @@ export async function buildApp(): Promise<FastifyInstance> {
   app.get<{ Querystring: { provider?: string; refresh?: string } }>("/v1/models", async (req, reply) => {
     const providerId = req.query.provider ?? "";
     const provider = getProvider(providerId);
-    if (!provider) return reply.status(400).send({ error: "bad_request", message: 'Query "provider" must be gemini or openrouter.' });
+    if (!provider) return reply.status(400).send({ error: "bad_request", message: 'Query "provider" must be gemini, openrouter or mock.' });
     const key = header(req, "x-provider-key") ?? "";
     if (!key && provider.id === "gemini") return reply.status(401).send({ error: "missing_key", message: "Header x-provider-key (Gemini API key) is required." });
     // OpenRouter's catalogue is the same for everyone; Gemini's depends on the key (hashed, never stored raw).
+    if (provider.id === "mock") return { models: await provider.listModels("") };
     const cacheKey = provider.id === "openrouter" ? "openrouter" : `gemini:${createHash("sha256").update(key).digest("hex").slice(0, 24)}`;
     const hit = modelsCache.get(cacheKey);
     if (hit && Date.now() - hit.at < MODELS_TTL_MS && req.query.refresh !== "1") {
@@ -93,7 +94,7 @@ export async function buildApp(): Promise<FastifyInstance> {
     const bad = validateChat(req.body);
     if (bad) return reply.status(400).send({ error: "bad_request", message: bad });
     const body = req.body;
-    const apiKey = header(req, "x-provider-key");
+    const apiKey = header(req, "x-provider-key") ?? (body.provider === "mock" ? "mock" : undefined);
     if (!apiKey) return reply.status(401).send({ error: "missing_key", message: `Header x-provider-key (${body.provider} API key) is required.` });
     const provider = getProvider(body.provider)!;
 

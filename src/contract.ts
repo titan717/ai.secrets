@@ -8,9 +8,10 @@
  *   events: `data: <AiStreamEvent JSON>\n\n`
  * POST {AI_URL}/v1/chat/:runId/confirm  body { call_id, approve }  -> resumes a paused agent run
  * POST {AI_URL}/v1/chat/:runId/stop     -> aborts the run
- * GET  {AI_URL}/v1/models?provider=gemini|openrouter  (header x-provider-key) -> { models: {id,name}[] }
+ * GET  {AI_URL}/v1/models?provider=gemini|openrouter|mock  (header x-provider-key) -> { models: {id,name}[] }
  */
-export type AiProvider = "gemini" | "openrouter";
+/** "mock" = demo provider, no key required (streams canned replies, exercises tools + confirm). */
+export type AiProvider = "gemini" | "openrouter" | "mock";
 export type EffortLevel = "low" | "medium" | "high" | "custom";
 export interface Effort { level: EffortLevel; maxSteps?: number; thinkingBudget?: number }
 
