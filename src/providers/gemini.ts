@@ -6,7 +6,7 @@
  *       https://ai.google.dev/api/models
  */
 import type { Effort } from "../contract.js";
-import { describeHttpError, readSse } from "./sse.js";
+import { describeHttpError, fetchWithRetry, readSse } from "./sse.js";
 import { ProviderError, type ChatProvider, type Chunk, type ConvMessage, type FinishReason, type StreamRequest, type ToolCall } from "./types.js";
 
 const BASE = "https://generativelanguage.googleapis.com/v1beta";
@@ -138,7 +138,7 @@ export const gemini: ChatProvider = {
     };
     const url = `${BASE}/models/${encodeURIComponent(model)}:streamGenerateContent?alt=sse`;
     const call = (withThinking: boolean) =>
-      fetch(url, { method: "POST", headers: { "x-goog-api-key": req.apiKey, "Content-Type": "application/json" }, body: build(withThinking), signal: req.signal });
+      fetchWithRetry(url, { method: "POST", headers: { "x-goog-api-key": req.apiKey, "Content-Type": "application/json" }, body: build(withThinking), signal: req.signal });
 
     let res: Response;
     try {

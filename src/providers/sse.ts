@@ -61,3 +61,18 @@ export async function describeHttpError(provider: string, res: Response): Promis
             : `${provider} request failed (${res.status}).`;
   return detail ? `${hint} ${detail}` : hint;
 }
+
+/** fetch with up to `retries` retries on 429/5xx (before any stream byte is consumed). Honors Retry-After (capped) and abort. */
+export async function fetchWithRetry(url: string | URL, init: RequestInit & { signal: AbortSignal }, retries = 2): Promise<Response> {
+  for (let attempt = 0; ; attempt++) {
+    const res = await fetch(url, init);
+    if (attempt >= retries || ![429, 500, 502, 503, 504].includes(res.status)) return res;
+    const ra = Number(res.headers.get("retry-after"));
+    const wait = Math.min(Number.isFinite(ra) && ra > 0 ? ra * 1000 : 800 * 2 ** attempt, 5000);
+    await res.body?.cancel().catch(() => {});
+    await new Promise<void>((resolve, reject) => {
+      const t = setTimeout(resolve, wait);
+      init.signal.addEventListener("abort", () => (clearTimeout(t), reject(init.signal.reason)), { once: true });
+    });
+  }
+}

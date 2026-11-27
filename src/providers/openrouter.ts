@@ -5,7 +5,7 @@
  *       https://openrouter.ai/docs/guides/features/tool-calling
  */
 import type { Effort } from "../contract.js";
-import { describeHttpError, readSse } from "./sse.js";
+import { describeHttpError, fetchWithRetry, readSse } from "./sse.js";
 import { ProviderError, type ChatProvider, type Chunk, type ConvMessage, type FinishReason, type StreamRequest, type ToolCall } from "./types.js";
 
 const BASE = "https://openrouter.ai/api/v1";
@@ -100,7 +100,7 @@ export const openrouter: ChatProvider = {
 
     let res: Response;
     try {
-      res = await fetch(`${BASE}/chat/completions`, { method: "POST", headers: headers(req.apiKey), body: JSON.stringify(body), signal: req.signal });
+      res = await fetchWithRetry(`${BASE}/chat/completions`, { method: "POST", headers: headers(req.apiKey), body: JSON.stringify(body), signal: req.signal });
     } catch (e) {
       if (req.signal.aborted) return;
       throw new ProviderError(`Could not reach OpenRouter: ${(e as Error).message}`);
