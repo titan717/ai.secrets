@@ -99,7 +99,7 @@ export async function runAgent({ req, provider, apiKey, ctx, run, emit }: LoopIn
     emit({ type: "done", reason: "step_limit" });
   } catch (e) {
     if (signal.aborted) return emit({ type: "done", reason: "stopped" });
-    const message = e instanceof ProviderError ? e.message : `Unexpected error: ${(e as Error).message}`;
+    const message = e instanceof ProviderError || (e as Error)?.name === "StreamStallError" ? (e as Error).message : `Unexpected error: ${(e as Error).message}`;
     emit({ type: "error", message });
   }
 }

@@ -31,6 +31,7 @@ curl localhost:8790/health
 | `SECRETS_API_URL` | — | Default Secrets API base, used when the body has no `secrets_api_url` |
 | `MODELS_CACHE_TTL_MS` | `600000` | How long `/v1/models` results are cached |
 | `MAX_TOOL_RESULT_CHARS` | `16000` | Tool results are truncated to this size before they go to the model |
+| `PROVIDER_STALL_TIMEOUT_MS` | `120000` | Abort a provider stream that sends nothing for this long |
 | `OPENROUTER_APP_URL` / `OPENROUTER_APP_TITLE` | — | OpenRouter attribution headers |
 | `LOG_LEVEL` | `info` | Pino log level |
 

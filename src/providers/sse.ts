@@ -1,3 +1,12 @@
+const STALL_MS = Number(process.env.PROVIDER_STALL_TIMEOUT_MS) || 120_000;
+
+export class StreamStallError extends Error {
+  constructor(ms: number) {
+    super(`The model stopped sending data for ${Math.round(ms / 1000)}s; the request was aborted. Try again.`);
+    this.name = "StreamStallError";
+  }
+}
+
 /** Minimal spec-compliant SSE reader: yields the `data` payload of each event (multi-line data joined by \n). Comment lines (": ...") are skipped. */
 export async function* readSse(body: ReadableStream<Uint8Array>, signal?: AbortSignal): AsyncGenerator<string> {
   const reader = body.getReader();
@@ -8,7 +17,13 @@ export async function* readSse(body: ReadableStream<Uint8Array>, signal?: AbortS
   signal?.addEventListener("abort", onAbort, { once: true });
   try {
     while (true) {
-      const { done, value } = await reader.read();
+      let stall: NodeJS.Timeout | undefined;
+      const { done, value } = await Promise.race([
+        reader.read(),
+        new Promise<never>((_, reject) => {
+          stall = setTimeout(() => reject(new StreamStallError(STALL_MS)), STALL_MS);
+        }),
+      ]).finally(() => clearTimeout(stall));
       if (done) break;
       buf += decoder.decode(value, { stream: true });
       let idx: number;
@@ -26,9 +41,16 @@ export async function* readSse(body: ReadableStream<Uint8Array>, signal?: AbortS
       }
     }
     if (data.length) yield data.join("\n");
+  } catch (e) {
+    reader.cancel().catch(() => {});
+    throw e;
   } finally {
     signal?.removeEventListener("abort", onAbort);
-    reader.releaseLock();
+    try {
+      reader.releaseLock();
+    } catch {
+      /* already released */
+    }
   }
 }
 
