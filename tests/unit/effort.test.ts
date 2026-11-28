@@ -38,8 +38,11 @@ describe("resolveEffort variants on real sets", () => {
     ["nemotron-nano", NEMOTRON_NANO, { low: "high", medium: "high", high: "high" }],
     ["particle", PARTICLE, { low: "low", medium: "medium", high: "high" }],
     ["openrouter/free", FREE, { low: "none", medium: "none", high: "none" }],
-    ["two-high-max", ["high", "max"], { low: "high", medium: "high", high: "high" }],
-    ["two-low-high", ["low", "high"], { low: "low", medium: "high", high: "high" }],
+    ["gemini-2.5-flash/pro (real)", ["high", "max"], { low: "high", medium: "high", high: "high" }],
+    ["gemini-3-pro-image (real)", ["low", "high"], { low: "low", medium: "high", high: "high" }],
+    ["gemini-3.1-pro-preview (real)", ["low", "medium", "high"], { low: "low", medium: "medium", high: "high" }],
+    ["gemini-3-flash-preview (real)", ["minimal", "low", "medium", "high"], { low: "low", medium: "medium", high: "high" }],
+    ["gemma-4-31b-it (real)", ["minimal", "high"], { low: "minimal", medium: "high", high: "high" }],
     ["xhigh-only", ["medium", "xhigh"], { low: "medium", medium: "medium", high: "xhigh" }],
     ["max-only", ["low", "max"], { low: "low", medium: "low", high: "max" }],
   ];

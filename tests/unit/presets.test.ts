@@ -22,8 +22,8 @@ describe("buildProviderEnv", () => {
       OPENROUTER_API_KEY: "or-1",
       GEMINI_API_KEY: "gm-1",
       GOOGLE_GENERATIVE_AI_API_KEY: "gm-1",
-      GITHUB_TOKEN: "gh-1",
-      SECRETS_TOKEN: "st-1",
+      SECRETS_AI_GITHUB_TOKEN: "gh-1",
+      SECRETS_AI_SECRETS_TOKEN: "st-1",
     });
   });
 });
@@ -39,5 +39,12 @@ describe("modelRef", () => {
   });
   it("falls back to the preset default", () => {
     expect(modelRef({ provider: "google", model: "" }).modelID).toBe("gemini-2.5-flash");
+  });
+});
+
+describe("buildProviderEnv never exposes generic GitHub names", () => {
+  it("does not set GITHUB_TOKEN / GITHUB_PERSONAL_ACCESS_TOKEN / SECRETS_TOKEN", () => {
+    const env = buildProviderEnv({ githubToken: "gh-1", secretsToken: "st-1" });
+    expect(env).toEqual({ SECRETS_AI_GITHUB_TOKEN: "gh-1", SECRETS_AI_SECRETS_TOKEN: "st-1" });
   });
 });

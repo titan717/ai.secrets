@@ -1,0 +1,2022 @@
+{
+ "_note": "Recorded from real opencode 1.19.6 GET /config/providers with placeholder keys, sanitized (key fields removed) and trimmed to 30 models.",
+ "providers": [
+  {
+   "id": "google",
+   "name": "Google",
+   "source": "env",
+   "env": [
+    "GOOGLE_API_KEY",
+    "GOOGLE_GENERATIVE_AI_API_KEY",
+    "GEMINI_API_KEY"
+   ],
+   "options": {},
+   "models": {
+    "gemini-2.5-flash": {
+     "id": "gemini-2.5-flash",
+     "providerID": "google",
+     "api": {
+      "id": "gemini-2.5-flash",
+      "url": "",
+      "npm": "@ai-sdk/google"
+     },
+     "name": "Gemini 2.5 Flash",
+     "family": "gemini-flash",
+     "capabilities": {
+      "temperature": true,
+      "reasoning": true,
+      "attachment": true,
+      "toolcall": true,
+      "input": {
+       "text": true,
+       "audio": true,
+       "image": true,
+       "video": true,
+       "pdf": true
+      },
+      "output": {
+       "text": true,
+       "audio": false,
+       "image": false,
+       "video": false,
+       "pdf": false
+      },
+      "interleaved": false
+     },
+     "cost": {
+      "input": 0.3,
+      "output": 2.5,
+      "cache": {
+       "read": 0.03,
+       "write": 0
+      }
+     },
+     "limit": {
+      "context": 1048576,
+      "output": 65536
+     },
+     "status": "active",
+     "options": {},
+     "headers": {},
+     "release_date": "2025-06-17",
+     "variants": {
+      "high": {
+       "thinkingConfig": {
+        "includeThoughts": true,
+        "thinkingBudget": 12288
+       }
+      },
+      "max": {
+       "thinkingConfig": {
+        "includeThoughts": true,
+        "thinkingBudget": 24576
+       }
+      }
+     }
+    },
+    "gemini-2.5-pro": {
+     "id": "gemini-2.5-pro",
+     "providerID": "google",
+     "api": {
+      "id": "gemini-2.5-pro",
+      "url": "",
+      "npm": "@ai-sdk/google"
+     },
+     "name": "Gemini 2.5 Pro",
+     "family": "gemini-pro",
+     "capabilities": {
+      "temperature": true,
+      "reasoning": true,
+      "attachment": true,
+      "toolcall": true,
+      "input": {
+       "text": true,
+       "audio": true,
+       "image": true,
+       "video": true,
+       "pdf": true
+      },
+      "output": {
+       "text": true,
+       "audio": false,
+       "image": false,
+       "video": false,
+       "pdf": false
+      },
+      "interleaved": false
+     },
+     "cost": {
+      "input": 1.25,
+      "output": 10,
+      "cache": {
+       "read": 0.125,
+       "write": 0
+      },
+      "tiers": [
+       {
+        "input": 2.5,
+        "output": 15,
+        "cache": {
+         "read": 0.25,
+         "write": 0
+        },
+        "tier": {
+         "type": "context",
+         "size": 200000
+        }
+       }
+      ],
+      "experimentalOver200K": {
+       "input": 2.5,
+       "output": 15,
+       "cache": {
+        "read": 0.25,
+        "write": 0
+       }
+      }
+     },
+     "limit": {
+      "context": 1048576,
+      "output": 65536
+     },
+     "status": "active",
+     "options": {},
+     "headers": {},
+     "release_date": "2025-06-17",
+     "variants": {
+      "high": {
+       "thinkingConfig": {
+        "includeThoughts": true,
+        "thinkingBudget": 16000
+       }
+      },
+      "max": {
+       "thinkingConfig": {
+        "includeThoughts": true,
+        "thinkingBudget": 31999
+       }
+      }
+     }
+    },
+    "gemini-2.5-flash-lite": {
+     "id": "gemini-2.5-flash-lite",
+     "providerID": "google",
+     "api": {
+      "id": "gemini-2.5-flash-lite",
+      "url": "",
+      "npm": "@ai-sdk/google"
+     },
+     "name": "Gemini 2.5 Flash-Lite",
+     "family": "gemini-flash-lite",
+     "capabilities": {
+      "temperature": true,
+      "reasoning": true,
+      "attachment": true,
+      "toolcall": true,
+      "input": {
+       "text": true,
+       "audio": true,
+       "image": true,
+       "video": true,
+       "pdf": true
+      },
+      "output": {
+       "text": true,
+       "audio": false,
+       "image": false,
+       "video": false,
+       "pdf": false
+      },
+      "interleaved": false
+     },
+     "cost": {
+      "input": 0.1,
+      "output": 0.4,
+      "cache": {
+       "read": 0.01,
+       "write": 0
+      }
+     },
+     "limit": {
+      "context": 1048576,
+      "output": 65536
+     },
+     "status": "active",
+     "options": {},
+     "headers": {},
+     "release_date": "2025-06-17",
+     "variants": {
+      "high": {
+       "thinkingConfig": {
+        "includeThoughts": true,
+        "thinkingBudget": 12288
+       }
+      },
+      "max": {
+       "thinkingConfig": {
+        "includeThoughts": true,
+        "thinkingBudget": 24576
+       }
+      }
+     }
+    },
+    "gemini-3.1-pro-preview": {
+     "id": "gemini-3.1-pro-preview",
+     "providerID": "google",
+     "api": {
+      "id": "gemini-3.1-pro-preview",
+      "url": "",
+      "npm": "@ai-sdk/google"
+     },
+     "name": "Gemini 3.1 Pro Preview",
+     "family": "gemini-pro",
+     "capabilities": {
+      "temperature": true,
+      "reasoning": true,
+      "attachment": true,
+      "toolcall": true,
+      "input": {
+       "text": true,
+       "audio": true,
+       "image": true,
+       "video": true,
+       "pdf": true
+      },
+      "output": {
+       "text": true,
+       "audio": false,
+       "image": false,
+       "video": false,
+       "pdf": false
+      },
+      "interleaved": false
+     },
+     "cost": {
+      "input": 2,
+      "output": 12,
+      "cache": {
+       "read": 0.2,
+       "write": 0
+      },
+      "tiers": [
+       {
+        "input": 4,
+        "output": 18,
+        "cache": {
+         "read": 0.4,
+         "write": 0
+        },
+        "tier": {
+         "type": "context",
+         "size": 200000
+        }
+       }
+      ],
+      "experimentalOver200K": {
+       "input": 4,
+       "output": 18,
+       "cache": {
+        "read": 0.4,
+        "write": 0
+       }
+      }
+     },
+     "limit": {
+      "context": 1048576,
+      "output": 65536
+     },
+     "status": "active",
+     "options": {},
+     "headers": {},
+     "release_date": "2026-02-19",
+     "variants": {
+      "low": {
+       "thinkingConfig": {
+        "includeThoughts": true,
+        "thinkingLevel": "low"
+       }
+      },
+      "medium": {
+       "thinkingConfig": {
+        "includeThoughts": true,
+        "thinkingLevel": "medium"
+       }
+      },
+      "high": {
+       "thinkingConfig": {
+        "includeThoughts": true,
+        "thinkingLevel": "high"
+       }
+      }
+     }
+    },
+    "gemini-3-flash-preview": {
+     "id": "gemini-3-flash-preview",
+     "providerID": "google",
+     "api": {
+      "id": "gemini-3-flash-preview",
+      "url": "",
+      "npm": "@ai-sdk/google"
+     },
+     "name": "Gemini 3 Flash Preview",
+     "family": "gemini-flash",
+     "capabilities": {
+      "temperature": true,
+      "reasoning": true,
+      "attachment": true,
+      "toolcall": true,
+      "input": {
+       "text": true,
+       "audio": true,
+       "image": true,
+       "video": true,
+       "pdf": true
+      },
+      "output": {
+       "text": true,
+       "audio": false,
+       "image": false,
+       "video": false,
+       "pdf": false
+      },
+      "interleaved": false
+     },
+     "cost": {
+      "input": 0.5,
+      "output": 3,
+      "cache": {
+       "read": 0.05,
+       "write": 0
+      }
+     },
+     "limit": {
+      "context": 1048576,
+      "output": 65536
+     },
+     "status": "active",
+     "options": {},
+     "headers": {},
+     "release_date": "2025-12-17",
+     "variants": {
+      "minimal": {
+       "thinkingConfig": {
+        "includeThoughts": true,
+        "thinkingLevel": "minimal"
+       }
+      },
+      "low": {
+       "thinkingConfig": {
+        "includeThoughts": true,
+        "thinkingLevel": "low"
+       }
+      },
+      "medium": {
+       "thinkingConfig": {
+        "includeThoughts": true,
+        "thinkingLevel": "medium"
+       }
+      },
+      "high": {
+       "thinkingConfig": {
+        "includeThoughts": true,
+        "thinkingLevel": "high"
+       }
+      }
+     }
+    },
+    "gemma-4-31b-it": {
+     "id": "gemma-4-31b-it",
+     "providerID": "google",
+     "api": {
+      "id": "gemma-4-31b-it",
+      "url": "",
+      "npm": "@ai-sdk/google"
+     },
+     "name": "Gemma 4 31B IT",
+     "family": "gemma",
+     "capabilities": {
+      "temperature": true,
+      "reasoning": true,
+      "attachment": true,
+      "toolcall": true,
+      "input": {
+       "text": true,
+       "audio": false,
+       "image": true,
+       "video": false,
+       "pdf": false
+      },
+      "output": {
+       "text": true,
+       "audio": false,
+       "image": false,
+       "video": false,
+       "pdf": false
+      },
+      "interleaved": false
+     },
+     "cost": {
+      "input": 0,
+      "output": 0,
+      "cache": {
+       "read": 0,
+       "write": 0
+      }
+     },
+     "limit": {
+      "context": 262144,
+      "output": 32768
+     },
+     "status": "active",
+     "options": {},
+     "headers": {},
+     "release_date": "2026-04-02",
+     "variants": {
+      "minimal": {
+       "thinkingConfig": {
+        "includeThoughts": true,
+        "thinkingLevel": "minimal"
+       }
+      },
+      "high": {
+       "thinkingConfig": {
+        "includeThoughts": true,
+        "thinkingLevel": "high"
+       }
+      }
+     }
+    },
+    "gemini-embedding-001": {
+     "id": "gemini-embedding-001",
+     "providerID": "google",
+     "api": {
+      "id": "gemini-embedding-001",
+      "url": "",
+      "npm": "@ai-sdk/google"
+     },
+     "name": "Gemini Embedding 001",
+     "family": "gemini",
+     "capabilities": {
+      "temperature": false,
+      "reasoning": false,
+      "attachment": false,
+      "toolcall": false,
+      "input": {
+       "text": true,
+       "audio": false,
+       "image": false,
+       "video": false,
+       "pdf": false
+      },
+      "output": {
+       "text": true,
+       "audio": false,
+       "image": false,
+       "video": false,
+       "pdf": false
+      },
+      "interleaved": false
+     },
+     "cost": {
+      "input": 0.15,
+      "output": 0,
+      "cache": {
+       "read": 0,
+       "write": 0
+      }
+     },
+     "limit": {
+      "context": 2048,
+      "output": 1
+     },
+     "status": "active",
+     "options": {},
+     "headers": {},
+     "release_date": "2025-05-20",
+     "variants": {}
+    },
+    "gemini-3-pro-image": {
+     "id": "gemini-3-pro-image",
+     "providerID": "google",
+     "api": {
+      "id": "gemini-3-pro-image",
+      "url": "",
+      "npm": "@ai-sdk/google"
+     },
+     "name": "Nano Banana Pro",
+     "family": "gemini-pro",
+     "capabilities": {
+      "temperature": true,
+      "reasoning": true,
+      "attachment": true,
+      "toolcall": false,
+      "input": {
+       "text": true,
+       "audio": false,
+       "image": true,
+       "video": false,
+       "pdf": false
+      },
+      "output": {
+       "text": true,
+       "audio": false,
+       "image": true,
+       "video": false,
+       "pdf": false
+      },
+      "interleaved": false
+     },
+     "cost": {
+      "input": 2,
+      "output": 12,
+      "cache": {
+       "read": 0,
+       "write": 0
+      }
+     },
+     "limit": {
+      "context": 65536,
+      "output": 32768
+     },
+     "status": "active",
+     "options": {},
+     "headers": {},
+     "release_date": "2026-05-28",
+     "variants": {
+      "low": {
+       "thinkingConfig": {
+        "includeThoughts": true,
+        "thinkingLevel": "low"
+       }
+      },
+      "high": {
+       "thinkingConfig": {
+        "includeThoughts": true,
+        "thinkingLevel": "high"
+       }
+      }
+     }
+    },
+    "gemini-2.5-flash-preview-tts": {
+     "id": "gemini-2.5-flash-preview-tts",
+     "providerID": "google",
+     "api": {
+      "id": "gemini-2.5-flash-preview-tts",
+      "url": "",
+      "npm": "@ai-sdk/google"
+     },
+     "name": "Gemini 2.5 Flash Preview TTS",
+     "family": "gemini-flash",
+     "capabilities": {
+      "temperature": true,
+      "reasoning": false,
+      "attachment": false,
+      "toolcall": false,
+      "input": {
+       "text": true,
+       "audio": false,
+       "image": false,
+       "video": false,
+       "pdf": false
+      },
+      "output": {
+       "text": false,
+       "audio": true,
+       "image": false,
+       "video": false,
+       "pdf": false
+      },
+      "interleaved": false
+     },
+     "cost": {
+      "input": 0.5,
+      "output": 10,
+      "cache": {
+       "read": 0,
+       "write": 0
+      }
+     },
+     "limit": {
+      "context": 8192,
+      "output": 16384
+     },
+     "status": "active",
+     "options": {},
+     "headers": {},
+     "release_date": "2025-05-01",
+     "variants": {}
+    },
+    "gemini-4-argon": {
+     "id": "gemini-4-argon",
+     "providerID": "google",
+     "api": {
+      "id": "gemini-4-argon",
+      "url": "",
+      "npm": "@ai-sdk/google"
+     },
+     "name": "Gemini 4 Argon",
+     "family": "gemini",
+     "capabilities": {
+      "temperature": true,
+      "reasoning": true,
+      "attachment": true,
+      "toolcall": true,
+      "input": {
+       "text": true,
+       "audio": true,
+       "image": true,
+       "video": true,
+       "pdf": true
+      },
+      "output": {
+       "text": true,
+       "audio": false,
+       "image": false,
+       "video": false,
+       "pdf": false
+      },
+      "interleaved": false
+     },
+     "cost": {
+      "input": 2,
+      "output": 10,
+      "cache": {
+       "read": 0.1,
+       "write": 0
+      }
+     },
+     "limit": {
+      "context": 1048576,
+      "output": 32768
+     },
+     "status": "active",
+     "options": {},
+     "headers": {},
+     "release_date": "2026-10-13",
+     "variants": {
+      "low": {
+       "thinkingConfig": {
+        "includeThoughts": true,
+        "thinkingLevel": "low"
+       }
+      },
+      "medium": {
+       "thinkingConfig": {
+        "includeThoughts": true,
+        "thinkingLevel": "medium"
+       }
+      },
+      "high": {
+       "thinkingConfig": {
+        "includeThoughts": true,
+        "thinkingLevel": "high"
+       }
+      }
+     }
+    },
+    "gemini-4-carbon": {
+     "id": "gemini-4-carbon",
+     "providerID": "google",
+     "api": {
+      "id": "gemini-4-carbon",
+      "url": "",
+      "npm": "@ai-sdk/google"
+     },
+     "name": "Gemini 4 Carbon",
+     "family": "gemini",
+     "capabilities": {
+      "temperature": true,
+      "reasoning": true,
+      "attachment": true,
+      "toolcall": true,
+      "input": {
+       "text": true,
+       "audio": true,
+       "image": true,
+       "video": true,
+       "pdf": true
+      },
+      "output": {
+       "text": true,
+       "audio": false,
+       "image": false,
+       "video": false,
+       "pdf": false
+      },
+      "interleaved": false
+     },
+     "cost": {
+      "input": 2,
+      "output": 10,
+      "cache": {
+       "read": 0.1,
+       "write": 0
+      }
+     },
+     "limit": {
+      "context": 1048576,
+      "output": 32768
+     },
+     "status": "active",
+     "options": {},
+     "headers": {},
+     "release_date": "2026-11-10",
+     "variants": {
+      "low": {
+       "thinkingConfig": {
+        "includeThoughts": true,
+        "thinkingLevel": "low"
+       }
+      },
+      "medium": {
+       "thinkingConfig": {
+        "includeThoughts": true,
+        "thinkingLevel": "medium"
+       }
+      },
+      "high": {
+       "thinkingConfig": {
+        "includeThoughts": true,
+        "thinkingLevel": "high"
+       }
+      }
+     }
+    },
+    "gemini-2.5-computer-use-preview-10-2025": {
+     "id": "gemini-2.5-computer-use-preview-10-2025",
+     "providerID": "google",
+     "api": {
+      "id": "gemini-2.5-computer-use-preview-10-2025",
+      "url": "",
+      "npm": "@ai-sdk/google"
+     },
+     "name": "Gemini 2.5 Computer Use Preview 10-2025",
+     "family": "gemini-pro",
+     "capabilities": {
+      "temperature": true,
+      "reasoning": true,
+      "attachment": true,
+      "toolcall": true,
+      "input": {
+       "text": true,
+       "audio": false,
+       "image": true,
+       "video": false,
+       "pdf": false
+      },
+      "output": {
+       "text": true,
+       "audio": false,
+       "image": false,
+       "video": false,
+       "pdf": false
+      },
+      "interleaved": false
+     },
+     "cost": {
+      "input": 1.25,
+      "output": 10,
+      "cache": {
+       "read": 0,
+       "write": 0
+      }
+     },
+     "limit": {
+      "context": 128000,
+      "output": 64000
+     },
+     "status": "active",
+     "options": {},
+     "headers": {},
+     "release_date": "2025-10-07",
+     "variants": {}
+    },
+    "gemini-3.5-flash-lite": {
+     "id": "gemini-3.5-flash-lite",
+     "providerID": "google",
+     "api": {
+      "id": "gemini-3.5-flash-lite",
+      "url": "",
+      "npm": "@ai-sdk/google"
+     },
+     "name": "Gemini 3.5 Flash Lite",
+     "family": "gemini-flash-lite",
+     "capabilities": {
+      "temperature": true,
+      "reasoning": true,
+      "attachment": true,
+      "toolcall": true,
+      "input": {
+       "text": true,
+       "audio": true,
+       "image": true,
+       "video": true,
+       "pdf": true
+      },
+      "output": {
+       "text": true,
+       "audio": false,
+       "image": false,
+       "video": false,
+       "pdf": false
+      },
+      "interleaved": false
+     },
+     "cost": {
+      "input": 0.3,
+      "output": 2.5,
+      "cache": {
+       "read": 0.03,
+       "write": 0
+      }
+     },
+     "limit": {
+      "context": 1048576,
+      "output": 65536
+     },
+     "status": "active",
+     "options": {},
+     "headers": {},
+     "release_date": "2026-07-21",
+     "variants": {
+      "minimal": {
+       "thinkingConfig": {
+        "includeThoughts": true,
+        "thinkingLevel": "minimal"
+       }
+      },
+      "low": {
+       "thinkingConfig": {
+        "includeThoughts": true,
+        "thinkingLevel": "low"
+       }
+      },
+      "medium": {
+       "thinkingConfig": {
+        "includeThoughts": true,
+        "thinkingLevel": "medium"
+       }
+      },
+      "high": {
+       "thinkingConfig": {
+        "includeThoughts": true,
+        "thinkingLevel": "high"
+       }
+      }
+     }
+    },
+    "gemini-3.6-flash": {
+     "id": "gemini-3.6-flash",
+     "providerID": "google",
+     "api": {
+      "id": "gemini-3.6-flash",
+      "url": "",
+      "npm": "@ai-sdk/google"
+     },
+     "name": "Gemini 3.6 Flash",
+     "family": "gemini-flash",
+     "capabilities": {
+      "temperature": true,
+      "reasoning": true,
+      "attachment": true,
+      "toolcall": true,
+      "input": {
+       "text": true,
+       "audio": true,
+       "image": true,
+       "video": true,
+       "pdf": true
+      },
+      "output": {
+       "text": true,
+       "audio": false,
+       "image": false,
+       "video": false,
+       "pdf": false
+      },
+      "interleaved": false
+     },
+     "cost": {
+      "input": 0.75,
+      "output": 3.75,
+      "cache": {
+       "read": 0.075,
+       "write": 0
+      }
+     },
+     "limit": {
+      "context": 1048576,
+      "output": 65536
+     },
+     "status": "active",
+     "options": {},
+     "headers": {},
+     "release_date": "2026-07-21",
+     "variants": {
+      "minimal": {
+       "thinkingConfig": {
+        "includeThoughts": true,
+        "thinkingLevel": "minimal"
+       }
+      },
+      "low": {
+       "thinkingConfig": {
+        "includeThoughts": true,
+        "thinkingLevel": "low"
+       }
+      },
+      "medium": {
+       "thinkingConfig": {
+        "includeThoughts": true,
+        "thinkingLevel": "medium"
+       }
+      },
+      "high": {
+       "thinkingConfig": {
+        "includeThoughts": true,
+        "thinkingLevel": "high"
+       }
+      }
+     }
+    },
+    "gemini-3.1-flash-lite": {
+     "id": "gemini-3.1-flash-lite",
+     "providerID": "google",
+     "api": {
+      "id": "gemini-3.1-flash-lite",
+      "url": "",
+      "npm": "@ai-sdk/google"
+     },
+     "name": "Gemini 3.1 Flash Lite",
+     "family": "gemini-flash-lite",
+     "capabilities": {
+      "temperature": true,
+      "reasoning": true,
+      "attachment": true,
+      "toolcall": true,
+      "input": {
+       "text": true,
+       "audio": true,
+       "image": true,
+       "video": true,
+       "pdf": true
+      },
+      "output": {
+       "text": true,
+       "audio": false,
+       "image": false,
+       "video": false,
+       "pdf": false
+      },
+      "interleaved": false
+     },
+     "cost": {
+      "input": 0.25,
+      "output": 1.5,
+      "cache": {
+       "read": 0.025,
+       "write": 0
+      }
+     },
+     "limit": {
+      "context": 1048576,
+      "output": 65536
+     },
+     "status": "active",
+     "options": {},
+     "headers": {},
+     "release_date": "2026-05-07",
+     "variants": {
+      "minimal": {
+       "thinkingConfig": {
+        "includeThoughts": true,
+        "thinkingLevel": "minimal"
+       }
+      },
+      "low": {
+       "thinkingConfig": {
+        "includeThoughts": true,
+        "thinkingLevel": "low"
+       }
+      },
+      "medium": {
+       "thinkingConfig": {
+        "includeThoughts": true,
+        "thinkingLevel": "medium"
+       }
+      },
+      "high": {
+       "thinkingConfig": {
+        "includeThoughts": true,
+        "thinkingLevel": "high"
+       }
+      }
+     }
+    },
+    "gemini-flash-lite-latest": {
+     "id": "gemini-flash-lite-latest",
+     "providerID": "google",
+     "api": {
+      "id": "gemini-flash-lite-latest",
+      "url": "",
+      "npm": "@ai-sdk/google"
+     },
+     "name": "Gemini Flash-Lite Latest",
+     "family": "gemini-flash-lite",
+     "capabilities": {
+      "temperature": true,
+      "reasoning": true,
+      "attachment": true,
+      "toolcall": true,
+      "input": {
+       "text": true,
+       "audio": true,
+       "image": true,
+       "video": true,
+       "pdf": true
+      },
+      "output": {
+       "text": true,
+       "audio": false,
+       "image": false,
+       "video": false,
+       "pdf": false
+      },
+      "interleaved": false
+     },
+     "cost": {
+      "input": 0.3,
+      "output": 2.5,
+      "cache": {
+       "read": 0.03,
+       "write": 0
+      }
+     },
+     "limit": {
+      "context": 1048576,
+      "output": 65536
+     },
+     "status": "active",
+     "options": {},
+     "headers": {},
+     "release_date": "2026-07-21",
+     "variants": {
+      "minimal": {
+       "thinkingConfig": {
+        "includeThoughts": true,
+        "thinkingLevel": "minimal"
+       }
+      },
+      "low": {
+       "thinkingConfig": {
+        "includeThoughts": true,
+        "thinkingLevel": "low"
+       }
+      },
+      "medium": {
+       "thinkingConfig": {
+        "includeThoughts": true,
+        "thinkingLevel": "medium"
+       }
+      },
+      "high": {
+       "thinkingConfig": {
+        "includeThoughts": true,
+        "thinkingLevel": "high"
+       }
+      }
+     }
+    },
+    "gemma-4-26b-a4b-it": {
+     "id": "gemma-4-26b-a4b-it",
+     "providerID": "google",
+     "api": {
+      "id": "gemma-4-26b-a4b-it",
+      "url": "",
+      "npm": "@ai-sdk/google"
+     },
+     "name": "Gemma 4 26B A4B IT",
+     "family": "gemma",
+     "capabilities": {
+      "temperature": true,
+      "reasoning": true,
+      "attachment": true,
+      "toolcall": true,
+      "input": {
+       "text": true,
+       "audio": false,
+       "image": true,
+       "video": false,
+       "pdf": false
+      },
+      "output": {
+       "text": true,
+       "audio": false,
+       "image": false,
+       "video": false,
+       "pdf": false
+      },
+      "interleaved": false
+     },
+     "cost": {
+      "input": 0,
+      "output": 0,
+      "cache": {
+       "read": 0,
+       "write": 0
+      }
+     },
+     "limit": {
+      "context": 262144,
+      "output": 32768
+     },
+     "status": "active",
+     "options": {},
+     "headers": {},
+     "release_date": "2026-04-02",
+     "variants": {
+      "minimal": {
+       "thinkingConfig": {
+        "includeThoughts": true,
+        "thinkingLevel": "minimal"
+       }
+      },
+      "high": {
+       "thinkingConfig": {
+        "includeThoughts": true,
+        "thinkingLevel": "high"
+       }
+      }
+     }
+    },
+    "gemini-3.1-flash-tts-preview": {
+     "id": "gemini-3.1-flash-tts-preview",
+     "providerID": "google",
+     "api": {
+      "id": "gemini-3.1-flash-tts-preview",
+      "url": "",
+      "npm": "@ai-sdk/google"
+     },
+     "name": "Gemini 3.1 Flash TTS Preview",
+     "family": "gemini-flash",
+     "capabilities": {
+      "temperature": true,
+      "reasoning": true,
+      "attachment": false,
+      "toolcall": false,
+      "input": {
+       "text": true,
+       "audio": false,
+       "image": false,
+       "video": false,
+       "pdf": false
+      },
+      "output": {
+       "text": false,
+       "audio": true,
+       "image": false,
+       "video": false,
+       "pdf": false
+      },
+      "interleaved": false
+     },
+     "cost": {
+      "input": 1,
+      "output": 20,
+      "cache": {
+       "read": 0,
+       "write": 0
+      }
+     },
+     "limit": {
+      "context": 8192,
+      "output": 16384
+     },
+     "status": "active",
+     "options": {},
+     "headers": {},
+     "release_date": "2026-04-15",
+     "variants": {}
+    },
+    "gemini-3.5-live-translate-preview": {
+     "id": "gemini-3.5-live-translate-preview",
+     "providerID": "google",
+     "api": {
+      "id": "gemini-3.5-live-translate-preview",
+      "url": "",
+      "npm": "@ai-sdk/google"
+     },
+     "name": "Gemini 3.5 Live Translate Preview",
+     "family": "gemini-pro",
+     "capabilities": {
+      "temperature": true,
+      "reasoning": false,
+      "attachment": true,
+      "toolcall": false,
+      "input": {
+       "text": false,
+       "audio": true,
+       "image": false,
+       "video": false,
+       "pdf": false
+      },
+      "output": {
+       "text": true,
+       "audio": true,
+       "image": false,
+       "video": false,
+       "pdf": false
+      },
+      "interleaved": false
+     },
+     "cost": {
+      "input": 3.5,
+      "output": 21,
+      "cache": {
+       "read": 0,
+       "write": 0
+      }
+     },
+     "limit": {
+      "context": 16384,
+      "output": 16384
+     },
+     "status": "active",
+     "options": {},
+     "headers": {},
+     "release_date": "2026-06-09",
+     "variants": {}
+    },
+    "gemini-4-hydrogen": {
+     "id": "gemini-4-hydrogen",
+     "providerID": "google",
+     "api": {
+      "id": "gemini-4-hydrogen",
+      "url": "",
+      "npm": "@ai-sdk/google"
+     },
+     "name": "Gemini 4 Hydrogen",
+     "family": "gemini",
+     "capabilities": {
+      "temperature": true,
+      "reasoning": true,
+      "attachment": true,
+      "toolcall": true,
+      "input": {
+       "text": true,
+       "audio": true,
+       "image": true,
+       "video": true,
+       "pdf": true
+      },
+      "output": {
+       "text": true,
+       "audio": false,
+       "image": false,
+       "video": false,
+       "pdf": false
+      },
+      "interleaved": false
+     },
+     "cost": {
+      "input": 1.5,
+      "output": 7.5,
+      "cache": {
+       "read": 0.075,
+       "write": 0
+      }
+     },
+     "limit": {
+      "context": 1048576,
+      "output": 65536
+     },
+     "status": "active",
+     "options": {},
+     "headers": {},
+     "release_date": "2026-11-12",
+     "variants": {
+      "low": {
+       "thinkingConfig": {
+        "includeThoughts": true,
+        "thinkingLevel": "low"
+       }
+      },
+      "medium": {
+       "thinkingConfig": {
+        "includeThoughts": true,
+        "thinkingLevel": "medium"
+       }
+      },
+      "high": {
+       "thinkingConfig": {
+        "includeThoughts": true,
+        "thinkingLevel": "high"
+       }
+      },
+      "xhigh": {
+       "thinkingConfig": {
+        "includeThoughts": true,
+        "thinkingLevel": "xhigh"
+       }
+      }
+     }
+    },
+    "lyria-3-clip-preview": {
+     "id": "lyria-3-clip-preview",
+     "providerID": "google",
+     "api": {
+      "id": "lyria-3-clip-preview",
+      "url": "",
+      "npm": "@ai-sdk/google"
+     },
+     "name": "Lyria 3 Clip Preview",
+     "family": "lyria",
+     "capabilities": {
+      "temperature": true,
+      "reasoning": false,
+      "attachment": true,
+      "toolcall": false,
+      "input": {
+       "text": true,
+       "audio": false,
+       "image": true,
+       "video": false,
+       "pdf": false
+      },
+      "output": {
+       "text": true,
+       "audio": true,
+       "image": false,
+       "video": false,
+       "pdf": false
+      },
+      "interleaved": false
+     },
+     "cost": {
+      "input": 0,
+      "output": 0,
+      "cache": {
+       "read": 0,
+       "write": 0
+      }
+     },
+     "limit": {
+      "context": 1048576,
+      "output": 65536
+     },
+     "status": "active",
+     "options": {},
+     "headers": {},
+     "release_date": "2026-03-25",
+     "variants": {}
+    },
+    "gemini-3.1-flash-image": {
+     "id": "gemini-3.1-flash-image",
+     "providerID": "google",
+     "api": {
+      "id": "gemini-3.1-flash-image",
+      "url": "",
+      "npm": "@ai-sdk/google"
+     },
+     "name": "Nano Banana 2",
+     "family": "gemini-flash",
+     "capabilities": {
+      "temperature": true,
+      "reasoning": true,
+      "attachment": true,
+      "toolcall": false,
+      "input": {
+       "text": true,
+       "audio": false,
+       "image": true,
+       "video": true,
+       "pdf": true
+      },
+      "output": {
+       "text": true,
+       "audio": false,
+       "image": true,
+       "video": false,
+       "pdf": false
+      },
+      "interleaved": false
+     },
+     "cost": {
+      "input": 0.5,
+      "output": 3,
+      "cache": {
+       "read": 0,
+       "write": 0
+      }
+     },
+     "limit": {
+      "context": 131072,
+      "output": 32768
+     },
+     "status": "active",
+     "options": {},
+     "headers": {},
+     "release_date": "2026-05-28",
+     "variants": {
+      "minimal": {
+       "thinkingConfig": {
+        "includeThoughts": true,
+        "thinkingLevel": "minimal"
+       }
+      },
+      "high": {
+       "thinkingConfig": {
+        "includeThoughts": true,
+        "thinkingLevel": "high"
+       }
+      }
+     }
+    },
+    "gemini-3.1-flash-live-preview": {
+     "id": "gemini-3.1-flash-live-preview",
+     "providerID": "google",
+     "api": {
+      "id": "gemini-3.1-flash-live-preview",
+      "url": "",
+      "npm": "@ai-sdk/google"
+     },
+     "name": "Gemini 3.1 Flash Live Preview",
+     "family": "gemini-flash",
+     "capabilities": {
+      "temperature": true,
+      "reasoning": true,
+      "attachment": true,
+      "toolcall": true,
+      "input": {
+       "text": true,
+       "audio": true,
+       "image": true,
+       "video": true,
+       "pdf": false
+      },
+      "output": {
+       "text": true,
+       "audio": true,
+       "image": false,
+       "video": false,
+       "pdf": false
+      },
+      "interleaved": false
+     },
+     "cost": {
+      "input": 0.75,
+      "output": 4.5,
+      "cache": {
+       "read": 0,
+       "write": 0
+      }
+     },
+     "limit": {
+      "context": 131072,
+      "output": 65536
+     },
+     "status": "active",
+     "options": {},
+     "headers": {},
+     "release_date": "2026-03-26",
+     "variants": {
+      "minimal": {
+       "thinkingConfig": {
+        "includeThoughts": true,
+        "thinkingLevel": "minimal"
+       }
+      },
+      "low": {
+       "thinkingConfig": {
+        "includeThoughts": true,
+        "thinkingLevel": "low"
+       }
+      },
+      "medium": {
+       "thinkingConfig": {
+        "includeThoughts": true,
+        "thinkingLevel": "medium"
+       }
+      },
+      "high": {
+       "thinkingConfig": {
+        "includeThoughts": true,
+        "thinkingLevel": "high"
+       }
+      }
+     }
+    },
+    "gemini-3.8-flash": {
+     "id": "gemini-3.8-flash",
+     "providerID": "google",
+     "api": {
+      "id": "gemini-3.8-flash",
+      "url": "",
+      "npm": "@ai-sdk/google"
+     },
+     "name": "Gemini 3.8 Flash",
+     "family": "gemini-flash",
+     "capabilities": {
+      "temperature": true,
+      "reasoning": true,
+      "attachment": true,
+      "toolcall": true,
+      "input": {
+       "text": true,
+       "audio": true,
+       "image": true,
+       "video": true,
+       "pdf": true
+      },
+      "output": {
+       "text": true,
+       "audio": false,
+       "image": false,
+       "video": false,
+       "pdf": false
+      },
+      "interleaved": false
+     },
+     "cost": {
+      "input": 0.75,
+      "output": 3.75,
+      "cache": {
+       "read": 0.075,
+       "write": 0
+      }
+     },
+     "limit": {
+      "context": 1048576,
+      "output": 65536
+     },
+     "status": "active",
+     "options": {},
+     "headers": {},
+     "release_date": "2026-09-02",
+     "variants": {
+      "low": {
+       "thinkingConfig": {
+        "includeThoughts": true,
+        "thinkingLevel": "low"
+       }
+      },
+      "medium": {
+       "thinkingConfig": {
+        "includeThoughts": true,
+        "thinkingLevel": "medium"
+       }
+      },
+      "high": {
+       "thinkingConfig": {
+        "includeThoughts": true,
+        "thinkingLevel": "high"
+       }
+      }
+     }
+    },
+    "gemini-3.7-flash": {
+     "id": "gemini-3.7-flash",
+     "providerID": "google",
+     "api": {
+      "id": "gemini-3.7-flash",
+      "url": "",
+      "npm": "@ai-sdk/google"
+     },
+     "name": "Gemini 3.7 Flash",
+     "family": "gemini-flash",
+     "capabilities": {
+      "temperature": true,
+      "reasoning": true,
+      "attachment": true,
+      "toolcall": true,
+      "input": {
+       "text": true,
+       "audio": true,
+       "image": true,
+       "video": true,
+       "pdf": true
+      },
+      "output": {
+       "text": true,
+       "audio": false,
+       "image": false,
+       "video": false,
+       "pdf": false
+      },
+      "interleaved": false
+     },
+     "cost": {
+      "input": 0.75,
+      "output": 3.75,
+      "cache": {
+       "read": 0.075,
+       "write": 0
+      }
+     },
+     "limit": {
+      "context": 1048576,
+      "output": 65536
+     },
+     "status": "active",
+     "options": {},
+     "headers": {},
+     "release_date": "2026-08-13",
+     "variants": {
+      "low": {
+       "thinkingConfig": {
+        "includeThoughts": true,
+        "thinkingLevel": "low"
+       }
+      },
+      "medium": {
+       "thinkingConfig": {
+        "includeThoughts": true,
+        "thinkingLevel": "medium"
+       }
+      },
+      "high": {
+       "thinkingConfig": {
+        "includeThoughts": true,
+        "thinkingLevel": "high"
+       }
+      }
+     }
+    },
+    "deep-research-preview-04-2026": {
+     "id": "deep-research-preview-04-2026",
+     "providerID": "google",
+     "api": {
+      "id": "deep-research-preview-04-2026",
+      "url": "",
+      "npm": "@ai-sdk/google"
+     },
+     "name": "Deep Research Preview (Apr-21-2026)",
+     "family": "gemini-pro",
+     "capabilities": {
+      "temperature": true,
+      "reasoning": true,
+      "attachment": true,
+      "toolcall": true,
+      "input": {
+       "text": true,
+       "audio": true,
+       "image": true,
+       "video": true,
+       "pdf": true
+      },
+      "output": {
+       "text": true,
+       "audio": false,
+       "image": true,
+       "video": false,
+       "pdf": false
+      },
+      "interleaved": false
+     },
+     "cost": {
+      "input": 2,
+      "output": 12,
+      "cache": {
+       "read": 0.2,
+       "write": 0
+      },
+      "tiers": [
+       {
+        "input": 4,
+        "output": 18,
+        "cache": {
+         "read": 0.4,
+         "write": 0
+        },
+        "tier": {
+         "type": "context",
+         "size": 200000
+        }
+       }
+      ],
+      "experimentalOver200K": {
+       "input": 4,
+       "output": 18,
+       "cache": {
+        "read": 0.4,
+        "write": 0
+       }
+      }
+     },
+     "limit": {
+      "context": 1048576,
+      "output": 65536
+     },
+     "status": "active",
+     "options": {},
+     "headers": {},
+     "release_date": "2026-04-21",
+     "variants": {}
+    },
+    "gemini-2.5-pro-preview-tts": {
+     "id": "gemini-2.5-pro-preview-tts",
+     "providerID": "google",
+     "api": {
+      "id": "gemini-2.5-pro-preview-tts",
+      "url": "",
+      "npm": "@ai-sdk/google"
+     },
+     "name": "Gemini 2.5 Pro Preview TTS",
+     "family": "gemini-flash",
+     "capabilities": {
+      "temperature": true,
+      "reasoning": false,
+      "attachment": false,
+      "toolcall": false,
+      "input": {
+       "text": true,
+       "audio": false,
+       "image": false,
+       "video": false,
+       "pdf": false
+      },
+      "output": {
+       "text": false,
+       "audio": true,
+       "image": false,
+       "video": false,
+       "pdf": false
+      },
+      "interleaved": false
+     },
+     "cost": {
+      "input": 1,
+      "output": 20,
+      "cache": {
+       "read": 0,
+       "write": 0
+      }
+     },
+     "limit": {
+      "context": 8192,
+      "output": 16384
+     },
+     "status": "active",
+     "options": {},
+     "headers": {},
+     "release_date": "2025-05-01",
+     "variants": {}
+    },
+    "gemini-3.1-pro-preview-customtools": {
+     "id": "gemini-3.1-pro-preview-customtools",
+     "providerID": "google",
+     "api": {
+      "id": "gemini-3.1-pro-preview-customtools",
+      "url": "",
+      "npm": "@ai-sdk/google"
+     },
+     "name": "Gemini 3.1 Pro Preview Custom Tools",
+     "family": "gemini-pro",
+     "capabilities": {
+      "temperature": true,
+      "reasoning": true,
+      "attachment": true,
+      "toolcall": true,
+      "input": {
+       "text": true,
+       "audio": true,
+       "image": true,
+       "video": true,
+       "pdf": true
+      },
+      "output": {
+       "text": true,
+       "audio": false,
+       "image": false,
+       "video": false,
+       "pdf": false
+      },
+      "interleaved": false
+     },
+     "cost": {
+      "input": 2,
+      "output": 12,
+      "cache": {
+       "read": 0.2,
+       "write": 0
+      },
+      "tiers": [
+       {
+        "input": 4,
+        "output": 18,
+        "cache": {
+         "read": 0.4,
+         "write": 0
+        },
+        "tier": {
+         "type": "context",
+         "size": 200000
+        }
+       }
+      ],
+      "experimentalOver200K": {
+       "input": 4,
+       "output": 18,
+       "cache": {
+        "read": 0.4,
+        "write": 0
+       }
+      }
+     },
+     "limit": {
+      "context": 1048576,
+      "output": 65536
+     },
+     "status": "active",
+     "options": {},
+     "headers": {},
+     "release_date": "2026-02-19",
+     "variants": {
+      "low": {
+       "thinkingConfig": {
+        "includeThoughts": true,
+        "thinkingLevel": "low"
+       }
+      },
+      "medium": {
+       "thinkingConfig": {
+        "includeThoughts": true,
+        "thinkingLevel": "medium"
+       }
+      },
+      "high": {
+       "thinkingConfig": {
+        "includeThoughts": true,
+        "thinkingLevel": "high"
+       }
+      }
+     }
+    },
+    "gemini-pro-latest": {
+     "id": "gemini-pro-latest",
+     "providerID": "google",
+     "api": {
+      "id": "gemini-pro-latest",
+      "url": "",
+      "npm": "@ai-sdk/google"
+     },
+     "name": "Gemini Pro Latest",
+     "family": "gemini-pro",
+     "capabilities": {
+      "temperature": true,
+      "reasoning": true,
+      "attachment": true,
+      "toolcall": true,
+      "input": {
+       "text": true,
+       "audio": true,
+       "image": true,
+       "video": true,
+       "pdf": true
+      },
+      "output": {
+       "text": true,
+       "audio": false,
+       "image": false,
+       "video": false,
+       "pdf": false
+      },
+      "interleaved": false
+     },
+     "cost": {
+      "input": 2,
+      "output": 12,
+      "cache": {
+       "read": 0.2,
+       "write": 0
+      },
+      "tiers": [
+       {
+        "input": 4,
+        "output": 18,
+        "cache": {
+         "read": 0.4,
+         "write": 0
+        },
+        "tier": {
+         "type": "context",
+         "size": 200000
+        }
+       }
+      ],
+      "experimentalOver200K": {
+       "input": 4,
+       "output": 18,
+       "cache": {
+        "read": 0.4,
+        "write": 0
+       }
+      }
+     },
+     "limit": {
+      "context": 1048576,
+      "output": 65536
+     },
+     "status": "active",
+     "options": {},
+     "headers": {},
+     "release_date": "2026-02-19",
+     "variants": {
+      "low": {
+       "thinkingConfig": {
+        "includeThoughts": true,
+        "thinkingLevel": "low"
+       }
+      },
+      "medium": {
+       "thinkingConfig": {
+        "includeThoughts": true,
+        "thinkingLevel": "medium"
+       }
+      },
+      "high": {
+       "thinkingConfig": {
+        "includeThoughts": true,
+        "thinkingLevel": "high"
+       }
+      }
+     }
+    },
+    "deep-research-max-preview-04-2026": {
+     "id": "deep-research-max-preview-04-2026",
+     "providerID": "google",
+     "api": {
+      "id": "deep-research-max-preview-04-2026",
+      "url": "",
+      "npm": "@ai-sdk/google"
+     },
+     "name": "Deep Research Max Preview (Apr-21-2026)",
+     "family": "gemini-pro",
+     "capabilities": {
+      "temperature": true,
+      "reasoning": true,
+      "attachment": true,
+      "toolcall": true,
+      "input": {
+       "text": true,
+       "audio": true,
+       "image": true,
+       "video": true,
+       "pdf": true
+      },
+      "output": {
+       "text": true,
+       "audio": false,
+       "image": true,
+       "video": false,
+       "pdf": false
+      },
+      "interleaved": false
+     },
+     "cost": {
+      "input": 2,
+      "output": 12,
+      "cache": {
+       "read": 0.2,
+       "write": 0
+      },
+      "tiers": [
+       {
+        "input": 4,
+        "output": 18,
+        "cache": {
+         "read": 0.4,
+         "write": 0
+        },
+        "tier": {
+         "type": "context",
+         "size": 200000
+        }
+       }
+      ],
+      "experimentalOver200K": {
+       "input": 4,
+       "output": 18,
+       "cache": {
+        "read": 0.4,
+        "write": 0
+       }
+      }
+     },
+     "limit": {
+      "context": 1048576,
+      "output": 65536
+     },
+     "status": "active",
+     "options": {},
+     "headers": {},
+     "release_date": "2026-04-21",
+     "variants": {}
+    }
+   }
+  }
+ ],
+ "default": {
+  "google": "gemini-3-pro-image"
+ }
+}

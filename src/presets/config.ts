@@ -58,6 +58,8 @@ export function buildOpenCodeConfig(input: OpenCodeConfigInput): Record<string, 
     $schema: CONFIG_SCHEMA,
     model,
     small_model: small,
+    // Defense in depth: never let an env GitHub token activate the Copilot provider.
+    disabled_providers: ["github-copilot"],
     permission,
     agent: { build, plan },
   };

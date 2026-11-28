@@ -16,6 +16,7 @@ describe("buildOpenCodeConfig", () => {
     expect(c.$schema).toBe("https://opencode.ai/config.json");
     expect(c.model).toBe("openrouter/openrouter/free");
     expect(c.small_model).toBe("openrouter/openrouter/free");
+    expect(c.disabled_providers).toEqual(["github-copilot"]);
     expect(c.provider.openrouter.options.headers).toEqual({ "HTTP-Referer": "https://github.com/titan717/secrets", "X-Title": "Secrets" });
     expect(c.permission).toMatchObject({ edit: "ask", bash: "ask", webfetch: "ask", read: "allow", glob: "allow", grep: "allow", list: "allow", question: "allow", external_directory: "ask" });
     expect(c.agent.build.steps).toBe(8);
@@ -46,7 +47,7 @@ describe("buildOpenCodeConfig", () => {
       expect(c.mcp.github).toEqual({
         type: "remote",
         url: "https://api.githubcopilot.com/mcp/",
-        headers: { Authorization: "Bearer {env:GITHUB_TOKEN}", "X-MCP-Toolsets": "context,repos,issues,pull_requests" },
+        headers: { Authorization: "Bearer {env:SECRETS_AI_GITHUB_TOKEN}", "X-MCP-Toolsets": "context,repos,issues,pull_requests" },
         enabled: true,
       });
       expect(c.mcp.secrets).toBeUndefined();
@@ -67,7 +68,7 @@ describe("buildOpenCodeConfig", () => {
       expect(c.mcp.secrets).toEqual({
         type: "local",
         command: ["/usr/bin/node", "/abs/dist/mcp/secrets-mcp.js"],
-        environment: { SECRETS_API_URL: url, SECRETS_TOKEN: "{env:SECRETS_TOKEN}" },
+        environment: { SECRETS_API_URL: url, SECRETS_TOKEN: "{env:SECRETS_AI_SECRETS_TOKEN}" },
         enabled: true,
       });
       expect(c.permission["secrets_read_conversation"]).toBe("allow");
@@ -79,6 +80,6 @@ describe("buildOpenCodeConfig", () => {
     const c = buildOpenCodeConfig(input({ tools: { github: true, secrets: true }, secretsApiUrl: "https://x.example" }, { github: true, secrets: true, google: true }));
     const s = JSON.stringify(c);
     expect(s).not.toMatch(/sk-or|AIza|ghp_|github_pat_/);
-    expect(s).toContain("{env:GITHUB_TOKEN}");
+    expect(s).toContain("{env:SECRETS_AI_GITHUB_TOKEN}");
   });
 });

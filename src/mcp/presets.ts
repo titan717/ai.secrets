@@ -8,6 +8,10 @@ export const GITHUB_MCP_URL = "https://api.githubcopilot.com/mcp/";
 export const GITHUB_TOOLSETS = ["context", "repos", "issues", "pull_requests"] as const;
 
 /** OpenCode names MCP tools `<server>_<tool>`; permission keys use the same names (wildcards allowed). */
+/** Private env names for MCP credentials in the opencode child (never GITHUB_TOKEN, see env.ts). */
+export const GITHUB_TOKEN_ENV = "SECRETS_AI_GITHUB_TOKEN";
+export const SECRETS_TOKEN_ENV = "SECRETS_AI_SECRETS_TOKEN";
+
 export const GITHUB_SERVER = "github";
 export const SECRETS_SERVER = "secrets";
 
@@ -56,7 +60,7 @@ export function githubMcpEntry(): Record<string, unknown> {
     type: "remote",
     url: GITHUB_MCP_URL,
     headers: {
-      Authorization: "Bearer {env:GITHUB_TOKEN}",
+      Authorization: `Bearer {env:${GITHUB_TOKEN_ENV}}`,
       "X-MCP-Toolsets": GITHUB_TOOLSETS.join(","),
     },
     enabled: true,
@@ -67,7 +71,7 @@ export function secretsMcpEntry(opts: { nodePath: string; entry: string; apiUrl:
   return {
     type: "local",
     command: [opts.nodePath, opts.entry],
-    environment: { SECRETS_API_URL: opts.apiUrl, SECRETS_TOKEN: "{env:SECRETS_TOKEN}" },
+    environment: { SECRETS_API_URL: opts.apiUrl, SECRETS_TOKEN: `{env:${SECRETS_TOKEN_ENV}}` },
     enabled: true,
   };
 }
