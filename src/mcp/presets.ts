@@ -7,7 +7,6 @@ export const GITHUB_MCP_URL = "https://api.githubcopilot.com/mcp/";
 /** Toolsets exposed to the model (sent as the X-MCP-Toolsets header). */
 export const GITHUB_TOOLSETS = ["context", "repos", "issues", "pull_requests"] as const;
 
-/** OpenCode names MCP tools `<server>_<tool>`; permission keys use the same names (wildcards allowed). */
 /** Private env names for MCP credentials in the opencode child (never GITHUB_TOKEN, see env.ts). */
 export const GITHUB_TOKEN_ENV = "SECRETS_AI_GITHUB_TOKEN";
 export const SECRETS_TOKEN_ENV = "SECRETS_AI_SECRETS_TOKEN";
@@ -15,7 +14,12 @@ export const SECRETS_TOKEN_ENV = "SECRETS_AI_SECRETS_TOKEN";
 export const GITHUB_SERVER = "github";
 export const SECRETS_SERVER = "secrets";
 
-/** GitHub MCP tools that change state. Everything else in the chosen toolsets is read-only. */
+/**
+ * OpenCode names MCP tools `<server>_<tool>` (verified against opencode 1.19.6 in
+ * tests/unit/mcp-opencode.real.test.ts); permission keys use the same names (wildcards allowed).
+ * Tool lists follow github/github-mcp-server README (Nov 2026). Unknown tools fall to the catch-all.
+ *
+ * GitHub MCP tools that change state. Everything else in the chosen toolsets is read-only. */
 export const GITHUB_WRITE_TOOLS = [
   "create_branch",
   "create_or_update_file",
@@ -23,10 +27,12 @@ export const GITHUB_WRITE_TOOLS = [
   "push_files",
   "create_repository",
   "fork_repository",
+  "delete_repository",
   "create_issue",
   "issue_write",
   "update_issue",
   "add_issue_comment",
+  "update_issue_comment",
   "sub_issue_write",
   "add_sub_issue",
   "remove_sub_issue",
@@ -49,7 +55,7 @@ export const GITHUB_WRITE_TOOLS = [
 ] as const;
 
 /** Read-only prefixes/names in the context/repos/issues/pull_requests toolsets. */
-export const GITHUB_READ_PATTERNS = ["get_*", "list_*", "search_*", "*_read"] as const;
+export const GITHUB_READ_PATTERNS = ["get_*", "list_*", "search_*", "*_read", "ui_get"] as const;
 
 export const SECRETS_READ_TOOLS = ["read_conversation", "summarize_dock_channel"] as const;
 /** draft_message never sends anything, but it is still gated so the user sees each draft request. */
