@@ -1,96 +1,97 @@
 # ai.secrets
 
-The AI agent service for **Secrets**. It streams chat from **Gemini** or **OpenRouter** over SSE and can run a multi-step tool loop with **GitHub** and **Secrets** tools. Write tools pause for user confirmation.
+AI bridge service and `secrets-ai` CLI for **Secrets**. It supervises the headless OpenCode CLI (`opencode serve`), normalizes its SSE events into a clean `AiEvent` stream, enforces localhost Bearer auth, and exposes both MCP servers (`secrets-mcp` and `github-mcp`).
 
-[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/titan717/ai.secrets)
-[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/new/template?template=https://github.com/titan717/ai.secrets)
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/titan717/ai.secrets&project-name=secrets-ai)
+```
+secrets frontend / secrets-ai CLI
+        │  HTTP + SSE (Normalized AiEvent)
+        ▼
+ai.secrets bridge (Fastify, 127.0.0.1:8790, Bearer auth)
+        │  HTTP + SSE (/session, /event, /permissions)
+        ▼
+opencode serve (supervised per workspace, auto-restart)
+        │
+        ▼
+OpenRouter / Gemini + MCP (github-mcp, secrets-mcp)
+```
 
-- **Render** reads [`render.yaml`](render.yaml), the Blueprint, and prompts for any `sync: false` env vars.
-- **Railway** builds the [`Dockerfile`](Dockerfile) using [`railway.json`](railway.json), with a `/health` healthcheck. If the button opens an empty project, use **New Project → Deploy from GitHub repo → titan717/ai.secrets** instead. Railway's official one-click buttons require a published template.
-- **Vercel** deploys [`api/index.ts`](api/index.ts) as a Node.js Function, using [`vercel.json`](vercel.json).
+---
 
-The service stores no keys. The browser sends the provider key, GitHub token and Secrets session token **per request in headers**. They are never logged: Fastify's logger redacts them.
+## Security & Keys
 
-## Run locally
+- Binds to `127.0.0.1:8790` by default.
+- Generates a Bearer token on first run in `~/.config/secrets-ai/config.json` (mode `0600`).
+- All `/v1/*` routes require `Authorization: Bearer <token>` (set `DISABLE_BRIDGE_AUTH=1` only if needed for local browser dev).
+- Keys come from environment variables (`OPENROUTER_API_KEY`, `GEMINI_API_KEY`, `GITHUB_TOKEN`), `~/.config/secrets-ai/config.json`, or per-request headers (`x-provider-key`).
+- Keys and tokens are never written raw to `opencode.json` or logs.
+- Write actions (`edit`, `bash`, GitHub writes, `draft_message`) emit `permission.request` events and support `allow`, `deny`, and `allow_session`.
+
+---
+
+## Run Modes
+
+### 1. Terminal (`secrets-ai` CLI, no frontend required)
 
 ```bash
 pnpm install
-cp .env.example .env   # optional
-pnpm dev               # or: pnpm build && pnpm start
-curl localhost:8790/health
+pnpm build
+node dist/cli/index.js init
+node dist/cli/index.js serve        # starts bridge on 127.0.0.1:8790
+node dist/cli/index.js chat         # interactive streaming chat with approval prompts
+node dist/cli/index.js run "Summarize recent commits"
+node dist/cli/index.js models --free-tools
 ```
 
-## Environment
+### 2. Local Daemon (Termux on Android / macOS / Linux)
 
-| Var | Default | Purpose |
-|---|---|---|
-| `PORT` | `8790` | HTTP port |
-| `HOST` | `0.0.0.0` | Bind address |
-| `CORS_ORIGIN` | `*` | `*` or a comma-separated list of origins |
-| `SECRETS_API_URL` | — | Default Secrets API base, used when the body has no `secrets_api_url` |
-| `MODELS_CACHE_TTL_MS` | `600000` | How long `/v1/models` results are cached |
-| `MAX_TOOL_RESULT_CHARS` | `16000` | Tool results are truncated to this size before they go to the model |
-| `PROVIDER_STALL_TIMEOUT_MS` | `120000` | Abort a provider stream that sends nothing for this long |
-| `OPENROUTER_APP_URL` / `OPENROUTER_APP_TITLE` | — | OpenRouter attribution headers |
-| `LOG_LEVEL` | `info` | Pino log level |
+On Termux:
+```bash
+bash scripts/install-termux.sh
+secrets-ai serve
+```
 
-## Endpoints
-
-The contract is in [`src/contract.ts`](src/contract.ts), an identical copy of `api.secrets/packages/shared/src/ai.ts`.
-
-| Method | Path | Notes |
-|---|---|---|
-| `POST` | `/v1/chat` | Body `AiChatRequest`. Headers: `x-provider-key` (required), `x-github-token`, `x-secrets-token`. Responds with `text/event-stream` and `data: <AiStreamEvent>` lines. The first event is `{type:"run", run_id}`. |
-| `POST` | `/v1/chat/:runId/confirm` | `{ call_id, approve }` resumes a run paused on `confirm_required`. A run waits 5 minutes, then treats the call as denied. |
-| `POST` | `/v1/chat/:runId/stop` | Aborts the run, which emits `done: stopped`. Closing the SSE connection also stops it. |
-| `GET` | `/v1/models?provider=gemini\|openrouter\|mock` | Header `x-provider-key` (not needed for `mock`). Returns `{ models: {id,name}[] }`, cached (`?refresh=1` bypasses the cache). |
-| `GET` | `/health` | `{ ok, service, version, active_runs }` |
+### 3. VPS (systemd)
 
 ```bash
-curl -N localhost:8790/v1/chat -H 'content-type: application/json' -H "x-provider-key: $OPENROUTER_API_KEY" -d '{
-  "provider":"openrouter","model":"openai/gpt-4o-mini","effort":{"level":"low"},
-  "messages":[{"role":"user","content":"Hello"}],
-  "agent_mode":false,"tools_enabled":{"github":false,"secrets":false},"auto_approve":false}'
+sudo cp deploy/secrets-ai.service /etc/systemd/system/secrets-ai.service
+sudo systemctl daemon-reload
+sudo systemctl enable --now secrets-ai
 ```
 
-### Mock provider (no key)
-
-`provider: "mock"` (model `mock-1`) works without `x-provider-key`, so the web app can be demoed end to end. The contract's `AiProvider` is `"gemini" | "openrouter" | "mock"`.
-
-- **Agent mode off**: streams a short reasoning delta, then a canned reply that echoes the user's message.
-- **Agent mode on**: offers two demo tools in addition to any enabled real tools.
-  1. Step 1 calls `demo_search`, a read tool.
-  2. Step 2 calls `demo_create_note`, a write tool. This emits `confirm_required` unless `auto_approve` is set.
-  3. Step 3 answers, and the answer changes depending on whether you approved or denied the note.
-- `/v1/models?provider=mock` returns `{ models: [{ id: "mock-1", name: "Mock (demo, no key)" }] }`.
+### 4. Docker
 
 ```bash
-curl -N localhost:8790/v1/chat -H 'content-type: application/json' -d '{"provider":"mock","model":"mock-1","effort":{"level":"low"},
-  "messages":[{"role":"user","content":"plan a trip"}],"agent_mode":true,"tools_enabled":{"github":false,"secrets":false},"auto_approve":false}'
-# then: curl -XPOST localhost:8790/v1/chat/<run_id>/confirm -H 'content-type: application/json' -d '{"call_id":"<call_id>","approve":true}'
+docker build -t ai.secrets .
+docker run -d -p 127.0.0.1:8790:8790 \
+  -e OPENROUTER_API_KEY=sk-or-v1-... \
+  -e SECRETS_AI_TOKEN=your-bridge-token \
+  ai.secrets
 ```
 
-### Effort
+---
 
-| Level | Max agent steps | OpenRouter | Gemini 2.5 | Gemini 3.x / 4 |
-|---|---|---|---|---|
-| low | 3 | `reasoning.effort: low` | `thinkingBudget: 1024` | `thinkingLevel: LOW` |
-| medium | 8 | `medium` | `8192` | `MEDIUM` |
-| high | 20 | `high` | `24576` (Pro `32768`) | `HIGH` |
-| custom | `maxSteps` | `reasoning.max_tokens = thinkingBudget` | `thinkingBudget` | 3.x `thinkingBudget`; 4: nearest level |
+## Bridge API
 
-[docs/PROVIDERS.md](docs/PROVIDERS.md) has the sources and details.
+| Method | Path | Description |
+|---|---|---|
+| `GET` | `/health` | Health check |
+| `POST` | `/v1/sessions` | Create workspace session |
+| `GET` | `/v1/sessions` | List sessions |
+| `POST` | `/v1/sessions/:id/messages` | Send prompt, stream normalized `AiEvent` SSE |
+| `POST` | `/v1/sessions/:id/abort` | Abort running session |
+| `POST` | `/v1/permissions/:id/respond` | Respond `{ decision: "allow" \| "deny" \| "allow_session" }` |
+| `GET` | `/v1/models` | List models (`?provider=openrouter&free_tools=1`) |
+| `GET` / `PUT` | `/v1/settings` | Read or update provider, model, effort, tools, systemPrompt |
+| `POST` | `/v1/settings/test-connection` | Verify provider API key |
 
-### Agent mode and tools
+Legacy `/v1/chat`, `/v1/chat/:runId/confirm`, and `/v1/chat/:runId/stop` endpoints remain available for backward compatibility.
 
-- `agent_mode: false` runs a single streamed completion with no tools.
-- `agent_mode: true` runs up to *max steps* model calls. Each step emits `step`, then `text`/`reasoning` deltas, then `tool_call` / `tool_result` for every call. The run ends with `done: complete | step_limit | stopped`, or with `error`.
-- **GitHub** (`tools_enabled.github`, needs `x-github-token`): `list_repos`, `read_file`, `search_code`, `list_issues`, and the write tools `create_branch`, `commit_file`, `open_issue`, `open_pr`.
-- **Secrets** (`tools_enabled.secrets`, needs `x-secrets-token` plus `secrets_api_url` or `SECRETS_API_URL`): `read_conversation`, `summarize_dock_channel`, and the write tool `draft_message`. `draft_message` only returns a draft and never sends anything.
-- A write tool with `auto_approve: false` emits `confirm_required` and waits for `/confirm`. A denied call returns `tool_result` with `denied: true`, and the model is told so.
+---
 
-## Deploying
+## Development & Tests
 
-- **Render / Railway / Docker**: long-running Node process, so everything works, including confirm and stop.
-- **Vercel**: `api/index.ts` wraps the Fastify app in a Node.js Function (`maxDuration` 300 s) and `vercel.json` rewrites every path to it. SSE streams work. **Limitation:** the run registry is in-memory, so `/confirm` and `/stop` only work when they reach the same function instance as the open stream, which serverless does not guarantee. On Vercel, use `auto_approve: true`, or deploy to Render/Railway if you need confirmations. Closing the SSE connection still stops a run.
+```bash
+pnpm typecheck
+pnpm test       # Vitest suite against tests/fake-opencode.mjs
+pnpm build
+```

@@ -4,8 +4,16 @@ import Fastify, { type FastifyInstance, type FastifyRequest } from "fastify";
 import type { AiChatRequest, AiStreamEvent } from "./contract.js";
 import { runAgent } from "./agent/loop.js";
 import { activeRuns, createRun, endRun, getRun } from "./agent/runs.js";
+import { registerBridgeRoutes, type BridgeRouterOptions } from "./bridge/routes.js";
+import { fetchOpenRouterModels } from "./presets/models.js";
 import { getProvider } from "./providers/index.js";
 import { ProviderError } from "./providers/types.js";
+import { ensureBridgeToken, readStoredConfig, verifyBearerToken } from "./security/auth.js";
+
+export interface BuildAppOptions extends BridgeRouterOptions {
+  bridgeToken?: string;
+  requireAuth?: boolean;
+}
 
 const VERSION = "0.1.0";
 const SECRET_HEADERS = ["x-provider-key", "x-github-token", "x-secrets-token", "authorization", "cookie"];
@@ -38,7 +46,10 @@ function validateChat(b: any): string | null {
 
 const modelsCache = new Map<string, { at: number; models: { id: string; name: string }[] }>();
 
-export async function buildApp(): Promise<FastifyInstance> {
+export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyInstance> {
+  const bridgeToken = options.bridgeToken ?? ensureBridgeToken();
+  const requireAuth = options.requireAuth ?? process.env.DISABLE_BRIDGE_AUTH !== "1";
+
   const app = Fastify({
     logger: {
       level: process.env.LOG_LEVEL || "info",
@@ -50,9 +61,20 @@ export async function buildApp(): Promise<FastifyInstance> {
 
   await app.register(cors, {
     origin: corsOrigin(),
-    methods: ["GET", "POST", "OPTIONS"],
+    methods: ["GET", "POST", "PUT", "OPTIONS"],
     allowedHeaders: ["content-type", ...SECRET_HEADERS.filter((h) => h !== "cookie")],
     maxAge: 86400,
+  });
+
+  app.addHook("onRequest", async (req, reply) => {
+    if (!requireAuth || req.method === "OPTIONS") return;
+    if (!req.url.startsWith("/v1/")) return;
+    if (!verifyBearerToken(req.headers.authorization, bridgeToken)) {
+      return reply.status(401).send({
+        error: "unauthorized",
+        message: "Valid Authorization: Bearer <token> header is required.",
+      });
+    }
   });
 
   app.setErrorHandler((err: any, _req, reply) => {
@@ -62,33 +84,71 @@ export async function buildApp(): Promise<FastifyInstance> {
 
   app.get("/health", async () => ({ ok: true, service: "ai.secrets", version: VERSION, active_runs: activeRuns() }));
 
-  app.get("/", async () => ({ service: "ai.secrets", endpoints: ["POST /v1/chat", "POST /v1/chat/:runId/confirm", "POST /v1/chat/:runId/stop", "GET /v1/models", "GET /health"] }));
+  app.get("/", async () => ({
+    service: "ai.secrets",
+    endpoints: [
+      "POST /v1/sessions",
+      "GET /v1/sessions",
+      "POST /v1/sessions/:id/messages",
+      "POST /v1/sessions/:id/abort",
+      "POST /v1/permissions/:id/respond",
+      "GET /v1/models",
+      "GET /v1/settings",
+      "PUT /v1/settings",
+      "POST /v1/settings/test-connection",
+      "POST /v1/chat",
+      "POST /v1/chat/:runId/confirm",
+      "POST /v1/chat/:runId/stop",
+      "GET /health",
+    ],
+  }));
 
-  app.get<{ Querystring: { provider?: string; refresh?: string } }>("/v1/models", async (req, reply) => {
-    const providerId = req.query.provider ?? "";
-    const provider = getProvider(providerId);
-    if (!provider) return reply.status(400).send({ error: "bad_request", message: 'Query "provider" must be gemini, openrouter or mock.' });
-    const key = header(req, "x-provider-key") ?? "";
-    if (!key && provider.id === "gemini") return reply.status(401).send({ error: "missing_key", message: "Header x-provider-key (Gemini API key) is required." });
-    // OpenRouter's catalogue is the same for everyone; Gemini's depends on the key (hashed, never stored raw).
-    if (provider.id === "mock") return { models: await provider.listModels("") };
-    const cacheKey = provider.id === "openrouter" ? "openrouter" : `gemini:${createHash("sha256").update(key).digest("hex").slice(0, 24)}`;
-    const hit = modelsCache.get(cacheKey);
-    if (hit && Date.now() - hit.at < MODELS_TTL_MS && req.query.refresh !== "1") {
-      reply.header("x-cache", "hit");
-      return { models: hit.models };
-    }
-    try {
-      const models = (await provider.listModels(key, AbortSignal.timeout(20_000))).sort((a, b) => a.id.localeCompare(b.id));
-      modelsCache.set(cacheKey, { at: Date.now(), models });
-      if (modelsCache.size > 500) modelsCache.delete(modelsCache.keys().next().value!);
-      reply.header("x-cache", "miss");
-      return { models };
-    } catch (e) {
-      const status = e instanceof ProviderError && e.status && e.status < 500 ? e.status : 502;
-      return reply.status(status).send({ error: "provider_error", message: (e as Error).message });
-    }
-  });
+  registerBridgeRoutes(app, options);
+
+  app.get<{ Querystring: { provider?: string; refresh?: string; free_tools?: string; freeOnly?: string } }>(
+    "/v1/models",
+    async (req, reply) => {
+      const providerId = (req.query.provider ?? "openrouter").toLowerCase();
+      const freeToolsOnly = req.query.free_tools === "1" || req.query.free_tools === "true" || req.query.freeOnly === "true";
+      const provider = getProvider(providerId);
+      if (!provider) return reply.status(400).send({ error: "bad_request", message: 'Query "provider" must be gemini, openrouter or mock.' });
+      const stored = readStoredConfig();
+      const key =
+        header(req, "x-provider-key") ??
+        (provider.id === "openrouter"
+          ? process.env.OPENROUTER_API_KEY || stored?.openrouterKey || ""
+          : provider.id === "gemini"
+            ? process.env.GEMINI_API_KEY || stored?.geminiKey || ""
+            : "");
+      if (!key && provider.id === "gemini") return reply.status(401).send({ error: "missing_key", message: "Header x-provider-key (Gemini API key) is required." });
+      if (provider.id === "mock") return { models: await provider.listModels("") };
+      if (provider.id === "openrouter" && freeToolsOnly) {
+        try {
+          const models = await fetchOpenRouterModels(key, { freeToolsOnly: true, signal: AbortSignal.timeout(20_000) });
+          return { models };
+        } catch (e) {
+          const status = e instanceof ProviderError && e.status && e.status < 500 ? e.status : 502;
+          return reply.status(status).send({ error: "provider_error", message: (e as Error).message });
+        }
+      }
+      const cacheKey = provider.id === "openrouter" ? "openrouter" : `gemini:${createHash("sha256").update(key).digest("hex").slice(0, 24)}`;
+      const hit = modelsCache.get(cacheKey);
+      if (hit && Date.now() - hit.at < MODELS_TTL_MS && req.query.refresh !== "1") {
+        reply.header("x-cache", "hit");
+        return { models: hit.models };
+      }
+      try {
+        const models = (await provider.listModels(key, AbortSignal.timeout(20_000))).sort((a, b) => a.id.localeCompare(b.id));
+        modelsCache.set(cacheKey, { at: Date.now(), models });
+        if (modelsCache.size > 500) modelsCache.delete(modelsCache.keys().next().value!);
+        reply.header("x-cache", "miss");
+        return { models };
+      } catch (e) {
+        const status = e instanceof ProviderError && e.status && e.status < 500 ? e.status : 502;
+        return reply.status(status).send({ error: "provider_error", message: (e as Error).message });
+      }
+    },
+  );
 
   app.post<{ Body: AiChatRequest }>("/v1/chat", async (req, reply) => {
     const bad = validateChat(req.body);

@@ -5,6 +5,9 @@
   "description": "AI agent service for Secrets: streams Gemini / OpenRouter chat with GitHub + Secrets tools over SSE.",
   "type": "module",
   "main": "dist/index.js",
+  "bin": {
+    "secrets-ai": "./dist/cli/index.js"
+  },
   "engines": {
     "node": ">=20"
   },
