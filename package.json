@@ -26,9 +26,10 @@
     "start": "node dist/index.js",
     "typecheck": "tsc --noEmit",
     "lint": "tsc --noEmit -p tsconfig.json && node scripts/check-no-secrets.mjs",
-    "test": "vitest run",
-    "test:real": "OPENCODE_REAL=1 vitest run tests/e2e",
-    "record-traces": "node scripts/record-traces.mjs"
+    "test": "pnpm build && vitest run",
+    "test:real": "OPENCODE_REAL=1 vitest run",
+    "record-traces": "node scripts/record-traces.mjs",
+    "test:unit": "vitest run"
   },
   "dependencies": {
     "@fastify/cors": "^11.0.0",

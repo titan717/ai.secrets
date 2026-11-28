@@ -5,6 +5,7 @@ export default defineConfig({
     index: "src/index.ts",
     "cli/index": "src/cli/index.ts",
     "mcp/secrets-mcp": "src/mcp/secrets-mcp.ts",
+    "bridge/server": "src/bridge/server.ts",
   },
   format: ["esm"],
   target: "node20",
