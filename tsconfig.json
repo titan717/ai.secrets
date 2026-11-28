@@ -5,6 +5,7 @@
     "moduleResolution": "NodeNext",
     "lib": ["ES2022", "DOM"],
     "strict": true,
+    "noUncheckedIndexedAccess": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
@@ -12,5 +13,5 @@
     "noEmit": true,
     "types": ["node"]
   },
-  "include": ["src", "api"]
+  "include": ["src", "tests"]
 }

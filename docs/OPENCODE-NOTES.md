@@ -1,167 +1,124 @@
-# OpenCode CLI & Bridge Research Notes
+# OpenCode integration notes (verified)
 
-_Verified: 2026-11-28_
+Verified on 2026-11-28 against **opencode-ai 1.19.6** (latest on npm, published 2026-11-17) by running the real binary in a sandbox, reading its live OpenAPI spec (`GET /doc`, 472 schemas) and recording real event traces. Sources: the binary itself, [OpenCode server docs](https://opencode.ai/docs/server/), [config docs](https://opencode.ai/docs/config/), [config JSON schema](https://opencode.ai/config.json), [OpenRouter API reference](https://openrouter.ai/docs/api-reference/list-available-models).
 
-This document records the OpenCode CLI (`opencode serve`), `@opencode-ai/sdk`, `opencode.json` schema, reasoning effort mapping, API key injection, and MCP configuration used by `ai.secrets`.
+Every claim marked **(verified)** was observed against the real binary, not taken from docs.
 
----
+## 1. `opencode serve`
 
-## 1. `opencode serve` Command
-
-OpenCode runs a headless HTTP + SSE server exposing an OpenAPI 3.1 specification.
-
-### Flags
-| Flag | Description | Default |
-|---|---|---|
-| `--port <number>` | Port to listen on | `4096` |
-| `--hostname <string>` | Interface to bind | `127.0.0.1` |
-| `--mdns` | Enable mDNS discovery | `false` |
-| `--mdns-domain <string>` | Custom mDNS domain | `opencode.local` |
-| `--cors <origin>` | Additional CORS origin(s), repeatable | `[]` |
-
-### Server Authentication (Env Vars)
-- `OPENCODE_SERVER_PASSWORD`: Enables HTTP Basic auth when set.
-- `OPENCODE_SERVER_USERNAME`: Overrides username (default `opencode`).
-
----
-
-## 2. HTTP & SSE Endpoints (`opencode serve`)
-
-| Method | Path | Purpose |
-|---|---|---|
-| `GET` | `/doc` | OpenAPI 3.1 JSON specification (also used as health check) |
-| `GET` | `/session` | List active/saved sessions |
-| `POST` | `/session` | Create a new session (`{ location: { directory } }`) |
-| `GET` | `/session/:id` | Get session details |
-| `POST` | `/session/:id/prompt` | Send a prompt/message (`{ text, model?, variant? }`) |
-| `POST` | `/session/:id/abort` | Abort a running session turn |
-| `GET` | `/session/:id/messages` | Get message history |
-| `POST` | `/session/:id/permissions/:permissionId` | Respond to a permission prompt (`{ response: "once" | "always" | "reject" }`) |
-| `GET` | `/event` | Global SSE event stream (`Accept: text/event-stream`) |
-
-### SSE Wire Format
-```http
-event: message
-data: {"type":"message.part.delta","properties":{...}}
+```
+opencode serve [--port 0] [--hostname 127.0.0.1] [--cors <origin>...] [--mdns] [--log-level DEBUG|INFO|WARN|ERROR] [--print-logs] [--pure]
 ```
 
-### Core OpenCode Event Types
-- `server.connected` — SSE stream established
-- `server.heartbeat` — keep-alive ping
-- `session.updated` — session metadata/status changed (`idle`, `busy`, `retry`)
-- `session.idle` — session finished current turn
-- `session.error` — error during session execution
-- `message.created` — new user or assistant message created
-- `message.part.delta` — incremental text or reasoning token delta (`part.type === "text" | "reasoning"`)
-- `part.updated` — tool call lifecycle (`pending` → `running` → `completed` | `error`)
-- `permission.asked` / `permission.updated` — tool/bash/edit permission request awaiting user approval
-- `question.asked` — interactive question from agent
-- `config.updated` — runtime config updated
+- `--port 0` (default) picks a free port. On start it prints `opencode server listening on http://127.0.0.1:<port>` to **stdout** **(verified)**. The supervisor parses that line, which avoids port races.
+- Default hostname is `127.0.0.1` **(verified)**.
+- `OPENCODE_SERVER_PASSWORD=<pw>` enables HTTP Basic auth (user `opencode`, override with `OPENCODE_SERVER_USERNAME`). With it set, **every** route, including `/doc` and `/global/health`, returns 401 without credentials **(verified)**. Without it, OpenCode warns `server is unsecured`. **The supervisor always sets a random per-child password.**
+- Health: `GET /global/health` → `{"healthy":true,"version":"1.19.6"}` **(verified)**.
+- OpenAPI 3.1 spec: `GET /doc` **(verified)**.
+- `cwd` of the child = workspace directory. Most routes also accept `?directory=` to target another project.
+- Config is read from `<cwd>/opencode.json` (project) merged over global `~/.config/opencode/opencode.json`. We isolate global state by giving each child its own `XDG_CONFIG_HOME` / `XDG_DATA_HOME` / `XDG_STATE_HOME` / `XDG_CACHE_HOME` under `~/.config/secrets-ai/workspaces/<id>/`. That way we never read or modify the user's personal OpenCode auth. The opencode.json path can also be forced with `OPENCODE_CONFIG=<file>`.
 
----
+## 2. HTTP routes the bridge uses (verified in /doc)
 
-## 3. `@opencode-ai/sdk` Usage
+| Purpose | Route | Body / notes |
+| --- | --- | --- |
+| Create session | `POST /session` | `{ title?, parentID?, agent?, model?: {id, providerID, variant?}, permission? }` → `Session {id:"ses_…", directory, title, cost, tokens, time}` |
+| List sessions | `GET /session` | `Session[]` |
+| Get / delete / rename | `GET/DELETE/PATCH /session/{id}` | |
+| Prompt (blocking) | `POST /session/{id}/message` | returns the final assistant message when the turn completes |
+| **Prompt (async)** | `POST /session/{id}/prompt_async` | **204**; progress arrives on `/event`. Body: `{ parts: [{type:"text", text}], model?: {providerID, modelID}, agent?, system?, variant?, tools?: {name: bool}, messageID?, noReply? }` |
+| Abort | `POST /session/{id}/abort` | → `true` |
+| Messages | `GET /session/{id}/message` | history `{info, parts}[]` (used for reconnect/replay) |
+| Status | `GET /session/status` | `{ [sessionID]: {type:"idle"|"busy"|"retry", …} }` |
+| Pending permissions | `GET /permission` | `PermissionRequest[]` |
+| **Reply permission** | `POST /permission/{requestID}/reply` | `{ reply: "once" \| "always" \| "reject", message? }` |
+| Pending questions | `GET /question` | |
+| Answer question | `POST /question/{requestID}/reply` | `{ answers: string[][] }` (one array of selected labels per question) |
+| Reject question | `POST /question/{requestID}/reject` | |
+| Providers + models | `GET /config/providers` | `{ providers: Provider[], default: {providerID: modelID} }`. Each model has `capabilities.toolcall`, `cost`, `limit`, `variants` |
+| Set provider key | `PUT /auth/{providerID}` | `{ type:"api", key }`, persisted in the child's isolated `XDG_DATA_HOME` |
+| Events | `GET /event` | SSE, `data: {id:"evt_…", type, properties}` |
 
-```ts
-import { createOpencodeClient } from "@opencode-ai/sdk";
+The legacy `POST /session/{id}/permissions/{permissionID}` still exists, but `/permission/{id}/reply` is the current route. The `/api/*` tree is a newer, experimental v2 API that we do not use yet.
 
-const client = createOpencodeClient({
-  baseUrl: "http://127.0.0.1:4096",
-});
+## 3. Event stream (verified with recorded traces)
 
-const session = await client.session.create({
-  body: { location: { directory: workspaceDir } },
-});
+The first event is `server.connected`, followed by periodic `server.heartbeat` events. Events are global, so the bridge filters by `properties.sessionID`. Recorded real traces live in `tests/fixtures/traces/*.jsonl` (scenarios: text, basic tool + permission allow, deny, question, provider error, abort).
 
-const events = await client.event.subscribe({ signal });
-for await (const ev of events) {
-  // ev.type, ev.properties
-}
-```
+Turn lifecycle, observed in this order:
 
-Note: `ai.secrets` supervises `opencode serve` directly via `child_process.spawn` on a dynamically allocated localhost port per workspace, health-checks `GET /doc`, and connects over HTTP + SSE.
+1. `message.updated` (user message, `info.role:"user"`) → `message.part.updated` (its text part; **ignore it**, because this is the user's own prompt).
+2. `session.status {status:{type:"busy"}}`.
+3. `message.updated` (assistant message, tokens 0).
+4. `message.part.updated part.type:"step-start"`.
+5. `message.part.updated part.type:"reasoning"|"text"` with empty text, which **announces the part id and type**.
+6. `message.part.delta {sessionID, messageID, partID, field:"text", delta}`. **The delta does not carry the part type.** The normalizer must remember `partID → type` from step 5 (the main bug in the previous implementation).
+7. `message.part.updated` again with the full accumulated `text` (and `time.end`). Do not re-emit it. Only emit any suffix that was not already streamed as a delta, because some providers do not stream.
+8. Tool parts: `message.part.updated part.type:"tool"` with `tool`, `callID`, `state.status`: `pending` (input `{}`) → `running` (input filled; may repeat) → `completed` (`state.output`, `state.title`, `state.metadata`) or `error` (`state.error`, e.g. `"The user rejected permission to use this specific tool call."`).
+9. Permission: `permission.asked {id:"per_…", sessionID, permission:"bash", patterns:["echo hi > b.txt"], metadata:{command}, always:["echo *"], tool:{messageID, callID}}`, then `permission.replied {sessionID, requestID, reply}`.
+10. Question tool: `question.asked {id:"que_…", sessionID, questions:[{question, header, options:[{label, description}], multiple?, custom?}], tool}`, then `question.replied {requestID, answers}`.
+11. `message.part.updated part.type:"step-finish"`, then `message.updated` (assistant) with `finish:"tool-calls"|"stop"`, `tokens:{total,input,output,reasoning,cache:{read,write}}`, `cost`, and finally `time.completed`. A completed assistant message is the usage event.
+12. Multi-step turns repeat 3–11 per step.
+13. End of turn: `session.status {type:"idle"}`, then **`session.idle {sessionID}`**.
+14. Errors: `session.error {sessionID, error:{name, data:{message, statusCode?, isRetryable?, responseBody?, responseHeaders?}}}`. Names: `ProviderAuthError`, `APIError`, `UnknownError`, `MessageOutputLengthError`, `MessageAbortedError` (on abort), `ContextOverflowError`, `ContentFilterError`, `StructuredOutputError`. `session.idle` still follows. **Never forward `responseBody`/`responseHeaders`**, because they can echo request details.
+15. Retries: `session.status {type:"retry", attempt, message, next, action?}`. Observed live with OpenCode's own free tier: `"Free usage exceeded, subscribe to Go"`.
 
----
+Other part types seen: `patch` (file diff summary after edits), `file`, `subtask`, `agent`, `compaction`. Other events: `session.diff`, `session.updated`, `session.created`, `todo.updated`, `file.edited`.
 
-## 4. `opencode.json` Schema
+## 4. opencode.json (verified with the 1.19.6 binary)
 
-Generated per workspace by the `ai.secrets` supervisor:
-
-```json
+```jsonc
 {
   "$schema": "https://opencode.ai/config.json",
-  "model": "openrouter/auto",
-  "autoupdate": false,
+  "model": "openrouter/openai/gpt-5-mini",        // "<providerID>/<modelID>"
+  "small_model": "openrouter/openai/gpt-5-mini",  // used for titles/summaries
   "provider": {
-    "openrouter": {
-      "apiKey": "{env:OPENROUTER_API_KEY}",
-      "models": {
-        "openrouter/auto": {
-          "options": {
-            "reasoningEffort": "medium"
-          }
-        }
-      }
-    },
-    "google": {
-      "apiKey": "{env:GEMINI_API_KEY}"
-    }
+    "openrouter": { "options": { "headers": { "HTTP-Referer": "...", "X-Title": "Secrets" } } },
+    "mock": { "npm": "@ai-sdk/openai-compatible", "options": { "baseURL": "http://127.0.0.1:PORT/v1", "apiKey": "x" },
+              "models": { "mock-1": { "name": "Mock", "tool_call": true, "reasoning": true } } }
   },
-  "permissions": [
-    { "action": "read", "resource": "*", "effect": "allow" },
-    { "action": "edit", "resource": "*", "effect": "ask" },
-    { "action": "bash", "resource": "*", "effect": "ask" }
-  ],
+  "permission": { "edit": "ask", "bash": "ask", "webfetch": "ask", "read": "allow", "question": "allow", "<mcp>_*": "ask" },
+  "agent": { "build": { "steps": 8, "prompt": "...", "permission": { ... } }, "plan": { "steps": 8 } },
   "mcp": {
-    "servers": {
-      "secrets": {
-        "type": "local",
-        "command": ["node", "/path/to/dist/mcp/secrets-mcp.js"],
-        "enabled": true
-      },
-      "github": {
-        "type": "local",
-        "command": ["node", "/path/to/dist/mcp/github-mcp.js"],
-        "enabled": true
-      }
-    }
-  },
-  "agent": {
-    "build": {
-      "model": "openrouter/auto",
-      "reasoningEffort": "medium"
-    }
+    "secrets": { "type": "local", "command": ["node", "/abs/dist/mcp/secrets-mcp.js"], "environment": { "SECRETS_API_URL": "..." }, "enabled": true },
+    "github":  { "type": "remote", "url": "https://api.githubcopilot.com/mcp/", "headers": { "Authorization": "Bearer {env:GITHUB_TOKEN}" }, "enabled": true }
   }
 }
 ```
 
----
+- `agent.<name>.steps` = maximum agentic iterations before forcing a text-only answer (`maxSteps` is deprecated). This is how Low/Medium/High/Custom map to 3/8/20/N.
+- Permission values: `"allow" | "ask" | "deny"`, or an object of glob pattern → action (for example `bash: {"git status*": "allow", "*": "ask"}`).
+- `{env:VAR}` substitution is supported in config strings, which keeps secrets off disk.
+- The published schema at opencode.ai is already moving to plural keys (`agents`, `permissions`, `providers`, all marked as the future). The singular keys above are what 1.19.6 accepts and are still in the schema (deprecated but supported). Revisit this when upgrading.
 
-## 5. Reasoning Effort & Step Limits
+## 5. API keys
 
-OpenCode supports effort tiers (`none`, `minimal`, `low`, `medium`, `high`, `xhigh`, `max`) via:
-1. `provider.<id>.models.<model>.options.reasoningEffort` (OpenRouter / OpenAI-compatible)
-2. `provider.anthropic.models.<model>.options.thinking` (`{ type: "enabled", budgetTokens }`)
-3. `agent.build.reasoningEffort`
-4. `--variant <tier>` on CLI
+- OpenRouter: env `OPENROUTER_API_KEY` (provider `env` list in `/config/providers`) **(verified)**.
+- Google/Gemini: provider id `google`, env `GEMINI_API_KEY`, `GOOGLE_GENERATIVE_AI_API_KEY` or `GOOGLE_API_KEY` **(verified)**.
+- Runtime injection without restart: `PUT /auth/{providerID} {type:"api", key}` (stored in the child's isolated data dir, which is 0700 under our config dir).
+- The bridge passes keys only via the child's environment or `/auth`. It never writes them into opencode.json.
 
-`ai.secrets` maps Secrets effort levels to both OpenCode reasoning options and max agent steps:
+## 6. Reasoning effort = model variants (verified)
 
-| Secrets Effort | Max Agent Steps | OpenRouter `reasoningEffort` | Custom Thinking Budget |
-|---|---|---|---|
-| `low` | `3` | `"low"` | — |
-| `medium` | `8` | `"medium"` | — |
-| `high` | `20` | `"high"` | — |
-| `custom` | `effort.maxSteps` (1–100) | `"none"` if budget ≤ 0, else `"medium"` + `budgetTokens` | `effort.thinkingBudget` |
+OpenCode exposes per-model `variants` in `/config/providers`. Each variant is a named set of provider options:
 
----
+| Model (OpenRouter) | Variants |
+| --- | --- |
+| `openai/gpt-5-mini` | minimal, low, medium, high → `{reasoning:{effort}}` |
+| `anthropic/claude-sonnet-4.5` | low, medium, high |
+| `nvidia/nemotron-3-ultra-550b-a55b:free` | none, medium, high |
+| `nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free` | high, max → `{reasoning:{max_tokens}}` |
+| `particle-ai/particle-1:free` | none, minimal, low, medium, high, xhigh, max |
+| `openrouter/free`, `liquid/lfm-3-1.7b:free` | none |
 
-## 6. API Key Injection
+The variant is selected per prompt (`variant` in the `prompt_async` body) or per agent (`agent.build.variant`). The effort mapping therefore must choose the **nearest available** variant for the selected model (see `src/presets/effort.ts`), and omit it when the model has none.
 
-- Keys are **never** written raw to `opencode.json` or logged.
-- `opencode.json` uses `{env:OPENROUTER_API_KEY}` / `{env:GEMINI_API_KEY}` references.
-- The supervisor injects the active key into the spawned `opencode serve` child process environment (`OPENROUTER_API_KEY`, `GEMINI_API_KEY`, `GITHUB_TOKEN`, `SECRETS_TOKEN`, `SECRETS_API_URL`).
-- Key resolution priority in `ai.secrets`:
-  1. Per-session/request header (`x-provider-key`)
-  2. Environment variable (`OPENROUTER_API_KEY` / `GEMINI_API_KEY`)
-  3. Local config file `~/.config/secrets-ai/config.json` (mode `0600`)
+## 7. Testing without keys
+
+- `tests/fixtures/mock-llm.mjs` is a scripted OpenAI-compatible server. Configured as a custom `@ai-sdk/openai-compatible` provider, it lets the **real** OpenCode run full agent loops (tools, permissions, questions, errors, abort) offline. `scripts/record-traces.mjs` uses it to record the fixtures.
+- `tests/fixtures/fake-opencode.mjs` replays those recorded traces and implements the routes above, so CI runs without the opencode binary.
+- `OPENCODE_REAL=1 pnpm test:real` runs the e2e suite against the real binary and the mock LLM.
+
+## 8. SDK
+
+`@opencode-ai/sdk` exists, but we use plain `fetch` with a small typed client (`src/opencode/client.ts`) to avoid coupling to SDK release cadence and to keep the Termux install light. The client only touches the routes listed in section 2.

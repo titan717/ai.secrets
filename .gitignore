@@ -1,8 +1,9 @@
 node_modules
 dist
+coverage
 .env
 .env.*
 !.env.example
-.vercel
 *.log
-opencode.json
+/opencode.json
+.secrets-ai/
