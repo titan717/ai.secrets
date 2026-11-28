@@ -1,5 +1,17 @@
+# Keep the build context small and secret-free.
+.git
+.github
 node_modules
 dist
-.git
+coverage
+*.log
 .env
-.vercel
+.env.*
+!.env.example
+**/auth.json
+.secrets-ai
+/opencode.json
+workspace
+deploy/secrets-ai.env
+tests
+docs

@@ -1,0 +1,31 @@
+# docker compose -f deploy/docker-compose.yml up -d --build
+# Then: docker compose -f deploy/docker-compose.yml exec secrets-ai secrets-ai auth set openrouter
+#       docker compose -f deploy/docker-compose.yml exec secrets-ai secrets-ai auth token
+services:
+  secrets-ai:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+      args:
+        OPENCODE_VERSION: "1.19.6"
+    image: secrets-ai:local
+    restart: unless-stopped
+    # Loopback only. Reach it from elsewhere with an SSH tunnel or a TLS reverse proxy.
+    ports:
+      - "127.0.0.1:8790:8790"
+    env_file:
+      # cp deploy/secrets-ai.env.example deploy/secrets-ai.env && chmod 600 deploy/secrets-ai.env
+      - path: ./secrets-ai.env
+        required: false
+    volumes:
+      - secrets-ai-config:/home/node/.config/secrets-ai
+      - ${SECRETS_AI_WORKSPACE_DIR:-./workspace}:/workspace
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    init: false # tini is the entrypoint
+volumes:
+  secrets-ai-config:

@@ -57,12 +57,16 @@ export async function serve(ctx: Ctx, deps: { startBridge?: StartBridge; waitFor
   const ws = flagStr(ctx, "workspace");
   const opencodeBin = flagStr(ctx, "opencode-bin");
   if (!isLoopback(host)) {
-    const bar = "!".repeat(72);
-    writeln(io.stderr, s.red(bar));
-    writeln(io.stderr, s.red(`WARNING: binding to ${host}, which is NOT loopback. Anyone who can reach this`));
-    writeln(io.stderr, s.red("port can try your bearer token. Prefer 127.0.0.1 plus an SSH tunnel or a TLS"));
-    writeln(io.stderr, s.red("reverse proxy (see docs/RUN-MODES.md). Never expose it without TLS."));
-    writeln(io.stderr, s.red(bar));
+    if (io.env.SECRETS_AI_CONTAINER === "1") {
+      writeln(io.stderr, s.yellow(`note: listening on ${host} inside a container. Publish the port to 127.0.0.1 only (-p 127.0.0.1:${port}:${port}) or put a TLS reverse proxy in front; the bearer token is still required.`));
+    } else {
+      const bar = "!".repeat(72);
+      writeln(io.stderr, s.red(bar));
+      writeln(io.stderr, s.red(`WARNING: binding to ${host}, which is NOT loopback. Anyone who can reach this`));
+      writeln(io.stderr, s.red("port can try your bearer token. Prefer 127.0.0.1 plus an SSH tunnel or a TLS"));
+      writeln(io.stderr, s.red("reverse proxy (see docs/RUN-MODES.md). Never expose it without TLS."));
+      writeln(io.stderr, s.red(bar));
+    }
   }
   // Make sure a token exists so clients on this machine can authenticate.
   if (!io.env.SECRETS_AI_TOKEN) ensureToken(io.env);
