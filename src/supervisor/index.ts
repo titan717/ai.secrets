@@ -22,7 +22,7 @@ import { paths } from "../core/paths.js";
 import { redact, registerSecret } from "../core/redact.js";
 import { writePrivateJson } from "../core/secure-file.js";
 import type { Secrets, Settings } from "../core/types.js";
-import { buildOpenCodeConfig, buildProviderEnv } from "../presets/index.js";
+import { buildOpenCodeConfig, buildProviderEnv, mcpCredentialFingerprint } from "../presets/index.js";
 import { OpenCodeClient } from "../opencode/client.js";
 
 export type SupervisorState = "stopped" | "starting" | "running" | "backoff" | "failed";
@@ -163,6 +163,9 @@ export class OpenCodeSupervisor extends EventEmitter {
   }
 
   /** Per-request secret overrides (in memory only). Applied on the next (re)start. */
+  /** MCP credential fingerprint of the last generated config. */
+  private credFp: string | undefined;
+
   setSecretOverrides(o: Secrets): void {
     this.overrides = Object.fromEntries(Object.entries(o).filter(([, v]) => v)) as Secrets;
   }
@@ -174,6 +177,7 @@ export class OpenCodeSupervisor extends EventEmitter {
   /** Generate (and write) opencode.json + the child env. */
   private prepare(): { env: NodeJS.ProcessEnv; signature: string } {
     const secrets = this.secrets();
+    this.credFp = mcpCredentialFingerprint(secrets);
     const settings = this.opts.getSettings();
     let cfg = buildOpenCodeConfig({
       settings,
@@ -450,10 +454,13 @@ export class OpenCodeSupervisor extends EventEmitter {
       return false;
     }
     const pw = this.password;
+    const fpBefore = this.credFp;
     const next = this.prepare().signature;
     this.password = pw;
     if (next === was) return false;
-    await this.restart("config changed");
+    // The fingerprint is non-reversible and safe to log; it lets ops see an MCP token rotation.
+    const fp = mcpCredentialFingerprint(this.secrets());
+    await this.restart(fp !== fpBefore ? `mcp credentials rotated ${fp}` : "config changed");
     return true;
   }
 }
