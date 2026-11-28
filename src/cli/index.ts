@@ -427,8 +427,20 @@ async function streamMessageEvents(opts: StreamOptions): Promise<number> {
         return "error";
       case "session.idle":
         return "idle";
-      case "usage":
+      case "usage": {
+        const parts: string[] = [];
+        if (event.inputTokens !== undefined || event.outputTokens !== undefined) {
+          parts.push(`${event.inputTokens ?? 0} in / ${event.outputTokens ?? 0} out`);
+        }
+        if (event.costUsd !== undefined) {
+          parts.push(`$${event.costUsd.toFixed(4)}`);
+        }
+        if (parts.length) {
+          process.stdout.write(`\n\x1b[2m[usage: ${parts.join(" · ")}]\x1b[0m`);
+          wroteOutput = true;
+        }
         return "continue";
+      }
     }
   };
 

@@ -16,10 +16,18 @@ export interface SendPromptBody {
  * HTTP + SSE client for a local OpenCode server.
  */
 export class OpenCodeClient {
-  private readonly baseUrl: string;
+  private baseUrl: string;
 
   constructor(baseUrl: string) {
     this.baseUrl = baseUrl.replace(/\/+$/, "");
+  }
+
+  setBaseUrl(baseUrl: string): void {
+    this.baseUrl = baseUrl.replace(/\/+$/, "");
+  }
+
+  getBaseUrl(): string {
+    return this.baseUrl;
   }
 
   async health(): Promise<boolean> {

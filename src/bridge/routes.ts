@@ -9,7 +9,7 @@ import {
 } from "../events.js";
 import { formatOpenCodeModel, mapEffort } from "../presets/effort.js";
 import { fetchGeminiModels, fetchOpenRouterModels, testProviderConnection } from "../presets/models.js";
-import { readStoredConfig, redactSecrets } from "../security/auth.js";
+import { readStoredConfig, readStoredSessions, redactSecrets, writeStoredSessions } from "../security/auth.js";
 import { OpenCodeSupervisor, type OpenCodeSupervisorOptions } from "../supervisor/opencode.js";
 import { normalizeOpenCodeEvent } from "./normalize.js";
 import { OpenCodeClient } from "./opencode-client.js";
@@ -73,11 +73,21 @@ export function registerBridgeRoutes(app: FastifyInstance, options: BridgeRouter
 
   const workspaces = new Map<string, { supervisor: OpenCodeSupervisor; client: OpenCodeClient }>();
   const sessions = new Map<string, { info: SessionInfo; workspaceDir: string; activeAbort?: AbortController }>();
+  for (const info of readStoredSessions<SessionInfo>()) {
+    if (info && typeof info.id === "string" && typeof info.workspaceDir === "string") {
+      sessions.set(info.id, { info, workspaceDir: info.workspaceDir });
+    }
+  }
   const permissionIndex = new Map<string, { sessionId: string; workspaceDir: string }>();
+
+  function persistSessions() {
+    writeStoredSessions([...sessions.values()].map((s) => s.info));
+  }
 
   async function ensureWorkspace(workspaceDir: string, req?: FastifyRequest) {
     const existing = workspaces.get(workspaceDir);
     if (existing && existing.supervisor.isRunning && existing.supervisor.baseUrl) {
+      existing.client.setBaseUrl(existing.supervisor.baseUrl);
       return existing;
     }
     const supervisor = new OpenCodeSupervisor({
@@ -157,6 +167,7 @@ export function registerBridgeRoutes(app: FastifyInstance, options: BridgeRouter
       model: settings.model,
     };
     sessions.set(info.id, { info, workspaceDir });
+    persistSessions();
     return reply.status(201).send({ session: info });
   });
 

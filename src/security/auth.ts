@@ -20,6 +20,33 @@ export function getAuthFilePath(): string {
   return join(getConfigDir(), "config.json");
 }
 
+export function getSessionsFilePath(): string {
+  return join(getConfigDir(), "sessions.json");
+}
+
+export function readStoredSessions<T = unknown>(): T[] {
+  const filePath = getSessionsFilePath();
+  if (!existsSync(filePath)) return [];
+  try {
+    const raw = readFileSync(filePath, "utf8");
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? (parsed as T[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+export function writeStoredSessions(sessions: unknown[]): void {
+  ensureConfigDir();
+  const filePath = getSessionsFilePath();
+  writeFileSync(filePath, JSON.stringify(sessions, null, 2) + "\n", { mode: 0o600 });
+  try {
+    chmodSync(filePath, 0o600);
+  } catch {
+    // Best-effort
+  }
+}
+
 export function ensureConfigDir(): string {
   const dir = getConfigDir();
   if (!existsSync(dir)) {

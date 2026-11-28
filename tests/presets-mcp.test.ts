@@ -7,7 +7,7 @@ import { handleMcpRequest as handleGithubMcp } from "../src/mcp/github-mcp.js";
 import { handleMcpRequest as handleSecretsMcp } from "../src/mcp/secrets-mcp.js";
 import { mapEffort } from "../src/presets/effort.js";
 import { testProviderConnection } from "../src/presets/models.js";
-import { ensureBridgeToken, redactSecrets } from "../src/security/auth.js";
+import { ensureBridgeToken, readStoredSessions, redactSecrets, writeStoredSessions } from "../src/security/auth.js";
 
 describe("Presets, Security, MCP & CLI", () => {
   const dirs: string[] = [];
@@ -60,6 +60,19 @@ describe("Presets, Security, MCP & CLI", () => {
     const ghNames = ((listGh?.result as any)?.tools ?? []).map((t: any) => t.name);
     expect(ghNames).toContain("list_repos");
     expect(ghNames).toContain("open_pr");
+  });
+
+  it("persists sessions with 0600 mode", () => {
+    const dir = mkdtempSync(join(tmpdir(), "secrets-ai-ses-"));
+    dirs.push(dir);
+    process.env.SECRETS_AI_CONFIG_DIR = dir;
+
+    writeStoredSessions([{ id: "ses_1", workspaceDir: "/tmp", createdAt: "2026-11-28T00:00:00Z" }]);
+    const loaded = readStoredSessions<{ id: string }>();
+    expect(loaded).toHaveLength(1);
+    expect(loaded[0].id).toBe("ses_1");
+    const mode = statSync(join(dir, "sessions.json")).mode & 0o777;
+    expect(mode).toBe(0o600);
   });
 
   it("tests mock provider connection", async () => {
