@@ -62,8 +62,19 @@ Endpoints come from titan717/secrets `apps/api`. Auth is `Authorization: Bearer 
 
 API gaps:
 - No drafts endpoint (see above).
-- `POST /v1/auth/service-token` tokens expire after 600 s. The MCP child's env is fixed when opencode starts, so after expiry the tools return 401 with a hint. The bridge has to restart the workspace's opencode with a fresh token (or the API needs longer-lived scoped tokens).
+- `POST /v1/auth/service-token` tokens expire after 600 s. The bridge handles this by restarting, see "Token rotation" below.
 - In the prototype `ciphertext` holds the plaintext JSON body. With real E2EE the server can't read messages, so these tools would need client-side decryption.
+
+## Token rotation (600 s Secrets tokens)
+
+secrets-mcp gets `SECRETS_TOKEN` from its environment, and that environment is fixed when `opencode serve` starts. A running MCP child therefore can't pick up a new token. The contract is:
+
+1. The Secrets app sends its current service token as `x-secrets-token` on each bridge turn request. `x-github-token` works the same way.
+2. The bridge sets it as a transient per-workspace override (`setSecretOverrides`) and calls `supervisor.reload()`.
+3. The supervisor compares `secretsTokenFingerprint(secrets)` (and `githubTokenFingerprint`, or both together as `mcpCredentialFingerprint`) from `src/presets`. **When the fingerprint changes, the bridge restarts that workspace's opencode** with the new value in `SECRETS_AI_SECRETS_TOKEN`. The new opencode then respawns secrets-mcp. A request carrying the same token causes no restart.
+4. If a token expires before a new one arrives, the tools return `isError` with HTTP 401 and the hint "send a fresh x-secrets-token". The model sees this and the turn goes on. The next request that carries a fresh token fixes it.
+
+The fingerprints are the first 16 hex characters of a domain-separated SHA-256 hash. They can't be reversed and are safe to log or compare, while the tokens themselves are never logged. A restart interrupts any turn in flight on that workspace, which then ends with `OpenCodeRestarted`. Clients should therefore refresh the token between turns, before it expires, for example whenever less than about 60 s of its lifetime is left.
 
 ## GitHub MCP preset (`githubMcpEntry()`)
 

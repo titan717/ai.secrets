@@ -1,6 +1,6 @@
 # Provider presets (`src/presets`)
 
-`src/presets/index.ts` exports `PROVIDER_PRESETS`, `buildOpenCodeConfig`, `buildProviderEnv`, `resolveEffort`, `listModels`, `testConnection`, `modelRef` and `sanitizeOpenCodeProviders`.
+`src/presets/index.ts` exports `PROVIDER_PRESETS`, `buildOpenCodeConfig`, `buildProviderEnv`, `resolveEffort`, `listModels`, `testConnection`, `modelRef`, `sanitizeOpenCodeProviders`, `stepsFor` and the token fingerprints (`secretsTokenFingerprint`, `githubTokenFingerprint`, `mcpCredentialFingerprint`; see [MCP.md](MCP.md#token-rotation-600-s-secrets-tokens)).
 
 ## Providers
 
@@ -30,6 +30,8 @@ opencode 1.19.6 reads Google keys from `GOOGLE_API_KEY`, `GOOGLE_GENERATIVE_AI_A
 | medium | 8 | nearest to `medium` |
 | high | 20 | `high`, else `xhigh`, else `max`, else nearest |
 | custom | `maxSteps` clamped 1..200 (default 8) | `effort.variant` if the model has it |
+
+`stepsFor(settings | effort, override?)` returns the same steps value that goes into `agent.<mode>.steps`. The normalizer uses it so step events can carry `maxSteps`.
 
 Scale: none < minimal < low < medium < high < xhigh < max. Ties go to the higher variant. If a model has no variants or `reasoning: false`, no variant is sent.
 

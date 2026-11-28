@@ -9,8 +9,10 @@ import { buildProviderEnv } from "./env.js";
 import { listModels, testConnection } from "./models.js";
 import { PROVIDER_PRESETS, modelRef } from "./providers.js";
 import { sanitizeOpenCodeProviders } from "./sanitize.js";
+import { githubTokenFingerprint, mcpCredentialFingerprint, secretsTokenFingerprint, stepsFor } from "./fingerprint.js";
 
 export { PROVIDER_PRESETS, buildOpenCodeConfig, buildProviderEnv, resolveEffort, listModels, testConnection, modelRef, sanitizeOpenCodeProviders };
+export { secretsTokenFingerprint, githubTokenFingerprint, mcpCredentialFingerprint, stepsFor };
 
 const presets: PresetsModule = { PROVIDER_PRESETS, buildOpenCodeConfig, buildProviderEnv, resolveEffort, listModels, testConnection, modelRef };
 export default presets;

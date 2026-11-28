@@ -66,7 +66,7 @@ export class SecretsApi {
     if (!res.ok) {
       const route = path.split("?")[0];
       const hint =
-        res.status === 401 ? "session expired or invalid token; sign in to Secrets again" :
+        res.status === 401 ? "Secrets token expired or invalid (service tokens last 10 min); send a fresh x-secrets-token with the next request so the bridge restarts opencode" :
         res.status === 403 ? "you don't have access to this conversation" :
         res.status === 404 ? "not found" :
         res.status === 429 ? "rate limited, try again shortly" : "";

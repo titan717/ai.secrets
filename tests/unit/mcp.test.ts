@@ -253,7 +253,7 @@ describe("secrets-mcp configuration errors", () => {
     const c = new Client({ SECRETS_API_URL: api.url, SECRETS_TOKEN: bad });
     await c.init();
     const r = await call(c, "read_conversation", { conversationId: IDS.dm });
-    expect(r.result.content[0].text).toMatch(/401.*sign in to Secrets again/);
+    expect(r.result.content[0].text).toMatch(/401.*fresh x-secrets-token/);
     await c.close();
     expect(c.stdout + c.stderr).not.toContain(bad);
   });
