@@ -71,6 +71,12 @@ describe("settings", () => {
     expect(() => validateSettingsPatch({ provider: "Bad Provider!" })).toThrow(SettingsError);
     expect(() => validateSettingsPatch([])).toThrow(SettingsError);
   });
+  it("accepts partial tool toggles without resetting the others", () => {
+    const cur = mergeSettings(loadSettings(envFor()), { tools: { github: true, secrets: true } });
+    const next = mergeSettings(cur, validateSettingsPatch({ tools: { secrets: false } }));
+    expect(next.tools).toEqual({ github: true, secrets: false });
+    expect(() => validateSettingsPatch({ tools: { github: "yes" } })).toThrow(SettingsError);
+  });
   it("persists and merges", () => {
     const env = envFor();
     const s = mergeSettings(loadSettings(env), { model: "openai/gpt-5-mini", tools: { github: true, secrets: false } });

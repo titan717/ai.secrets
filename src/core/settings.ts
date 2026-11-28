@@ -44,7 +44,15 @@ export function validateSettingsPatch(patch: unknown): Partial<Settings> {
   if ("tools" in p) {
     const t = p.tools as Record<string, unknown>;
     if (!t || typeof t !== "object") throw new SettingsError("tools must be an object");
-    out.tools = { github: Boolean(t.github), secrets: Boolean(t.secrets) };
+    // Partial toggles are allowed: omitted keys keep their current value (see mergeSettings).
+    const tools: Partial<Settings["tools"]> = {};
+    for (const k of ["github", "secrets"] as const) {
+      if (k in t) {
+        if (typeof t[k] !== "boolean") throw new SettingsError(`tools.${k} must be a boolean`);
+        tools[k] = t[k] as boolean;
+      }
+    }
+    out.tools = tools as Settings["tools"];
   }
   if ("systemPrompt" in p) {
     if (p.systemPrompt !== null && typeof p.systemPrompt !== "string") throw new SettingsError("systemPrompt must be a string");

@@ -9,7 +9,13 @@
   "bin": {
     "secrets-ai": "dist/cli/index.js"
   },
-  "files": ["dist", "scripts/install-termux.sh", "deploy", ".env.example", "README.md"],
+  "files": [
+    "dist",
+    "scripts/install-termux.sh",
+    "deploy",
+    ".env.example",
+    "README.md"
+  ],
   "engines": {
     "node": ">=20"
   },
@@ -33,6 +39,6 @@
     "tsup": "^8.5.0",
     "tsx": "^4.19.0",
     "typescript": "~5.9.3",
-    "vitest": "^5.1.2"
+    "vitest": "^3.2.7"
   }
 }
