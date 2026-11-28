@@ -1,4 +1,4 @@
-import { existsSync, mkdtempSync, readFileSync, statSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, realpathSync, statSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
@@ -78,7 +78,8 @@ describe("OpenCodeSupervisor (fake opencode)", () => {
     const { sup, home, workspace } = make({ configOverride: (c) => ({ ...c, provider: { mock: { models: { "mock-1": { name: "Mock" } } } } }) });
     await sup.start();
     const i = await info(sup);
-    expect(resolve(i.cwd)).toBe(resolve(workspace));
+    // macOS tmpdir is a symlink (/var -> /private/var) and the child reports the real path.
+    expect(realpathSync(i.cwd)).toBe(realpathSync(workspace));
     expect(sup.stateDir.startsWith(join(home, "workspaces"))).toBe(true);
     for (const k of ["config", "data", "state", "cache"]) expect(i.xdg[k]).toBe(join(sup.stateDir, k));
     expect(i.configPath).toBe(join(sup.stateDir, "opencode.json"));
