@@ -7,6 +7,7 @@ export interface StartBridgeTestOptions {
   logger?: BridgeAppOptions["logger"];
   pingMs?: number;
   models?: BridgeAppOptions["models"];
+  modelOverride?: BridgeAppOptions["modelOverride"];
   /** Do not start the default workspace's OpenCode eagerly. */
   lazy?: boolean;
 }
@@ -30,6 +31,7 @@ export async function startBridge(opts: StartBridgeOptions & StartBridgeTestOpti
     supervisor: opts.supervisor,
     pingMs: opts.pingMs,
     models: opts.models,
+    modelOverride: opts.modelOverride,
   });
   const app = await buildApp(bridge);
   await app.listen({ host, port });

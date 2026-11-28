@@ -44,6 +44,8 @@ export interface BridgeAppOptions {
   supervisor?: Partial<Omit<SupervisorOptions, "workspace" | "getSettings" | "getSecrets">>;
   pingMs?: number;
   /** Test hook: provider API base URLs / fetch used by listModels and testConnection. */
+  /** Test hook: force every prompt onto this OpenCode model (e.g. a custom mock provider). */
+  modelOverride?: { providerID: string; modelID: string };
   models?: { baseUrls?: ListModelsOptions["baseUrls"]; fetchImpl?: typeof fetch };
 }
 
@@ -275,7 +277,7 @@ export class Bridge {
     const settings = this.settings();
     const provider = body.provider ?? settings.provider;
     const model = body.model ?? (body.provider && body.provider !== settings.provider ? (PROVIDER_PRESETS as any)[provider]?.defaultModel : settings.model) ?? settings.model;
-    const ref = modelRef({ provider, model });
+    const ref = this.opts.modelOverride ?? modelRef({ provider, model });
     const effort = body.effort ?? settings.effort;
     const secrets = { ...this.secrets() };
     if (sec.providerKey) {
