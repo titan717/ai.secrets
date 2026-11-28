@@ -1,0 +1,19 @@
+{
+ "data": {
+  "label": "sk-or-v1-0e6...1c96",
+  "limit": null,
+  "limit_reset": null,
+  "limit_remaining": null,
+  "usage": 0,
+  "usage_daily": 0,
+  "usage_weekly": 0,
+  "usage_monthly": 0,
+  "is_free_tier": true,
+  "is_management_key": false,
+  "free_model_daily_requests": {
+   "limit": 50,
+   "remaining": 38,
+   "used": 12
+  }
+ }
+}

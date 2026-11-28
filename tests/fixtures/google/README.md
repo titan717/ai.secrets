@@ -1,0 +1,3 @@
+- `opencode-providers.json`: recorded from real opencode 1.19.6 `GET /config/providers` (placeholder key, sanitized, trimmed).
+- `models-page{1,2}.json`: Gemini `GET /v1beta/models` pages in the documented shape (https://ai.google.dev/api/models). They were written by hand because we have no real key, using ids from the OpenCode catalog.
+- `error-invalid-key.json`: the real error body returned by `GET /v1beta/models` with an invalid key (recorded 2026-11-28; HTTP 400).

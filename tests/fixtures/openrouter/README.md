@@ -1,0 +1,4 @@
+- `models.json`: recorded from the public `GET https://openrouter.ai/api/v1/models` on 2026-11-28, trimmed to 30 models with descriptions shortened.
+- `opencode-providers.json`: recorded from real opencode 1.19.6 `GET /config/providers` (placeholder key, sanitized, trimmed).
+- `key-invalid.json`: the real body returned by `GET /api/v1/key` with an invalid key (HTTP 401).
+- `key.json`: the documented `GET /api/v1/key` shape (https://openrouter.ai/docs/api/api-reference/api-keys/get-current-api-key), trimmed.
