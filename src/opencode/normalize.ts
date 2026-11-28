@@ -230,10 +230,14 @@ export class Normalizer {
     const callId: string = part.callID ?? part.id;
     const name: string = part.tool ?? "tool";
     const state = part.state ?? {};
-    let t = this.tools.get(callId);
+    // Key by part id: provider call ids are only unique per response (and scripted LLMs reuse them).
+    const key = `${sessionId}\u0000${part.messageID ?? ""}\u0000${part.id ?? callId}`;
+    let t = this.tools.get(key);
     if (!t) {
       t = { started: false, ended: false };
-      this.tools.set(callId, t);
+      this.tools.set(key, t);
+      // Bounded memory for long-lived bridges: forget the oldest tool parts.
+      if (this.tools.size > 5000) for (const k of [...this.tools.keys()].slice(0, 1000)) this.tools.delete(k);
     }
     const out: AiEvent[] = [];
     if (t.ended) return out;

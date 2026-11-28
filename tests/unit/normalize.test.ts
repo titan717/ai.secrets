@@ -203,6 +203,12 @@ describe("Normalizer edge cases", () => {
     ]);
   });
 
+  it("tracks tools per part, so a reused provider call id in a later message still emits", () => {
+    const tool = (id: string, messageID: string) => part({ id, messageID, type: "tool", tool: "read", callID: "call_1", state: { status: "completed", input: {}, output: "ok" } });
+    const out = run([asst("m1"), tool("t1", "m1"), asst("m2"), tool("t2", "m2"), tool("t2", "m2")]);
+    expect(out.map((e) => e.type)).toEqual(["tool.start", "tool.end", "tool.start", "tool.end"]);
+  });
+
   it("maps retry status and redacts secrets in error messages", () => {
     const out = run([
       { type: "session.status", properties: { sessionID: S, status: { type: "retry", attempt: 2, message: "Free usage exceeded", next: 123 } } },
